@@ -1,0 +1,6 @@
+@RetirementCalculator.Api_HostAddress = http://localhost:5051
+
+GET {{RetirementCalculator.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
