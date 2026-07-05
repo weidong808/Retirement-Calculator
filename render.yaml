@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: retirecheck-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/calculator/fra?birthYear=1960
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Cors__AllowVercelApp
+        value: "true"

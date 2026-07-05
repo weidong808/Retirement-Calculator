@@ -52,7 +52,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("Frontend");
-if (!app.Environment.IsDevelopment())
+// HTTPS is terminated by the host (Render, Azure, etc.); redirect breaks health checks behind proxies.
+if (!app.Environment.IsDevelopment() && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PORT")))
 {
     app.UseHttpsRedirection();
 }

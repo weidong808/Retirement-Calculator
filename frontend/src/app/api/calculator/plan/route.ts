@@ -2,9 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCalculatorApiBase } from "@/lib/calculatorApiUrl";
 
 export async function POST(request: NextRequest) {
+  const apiBase = getCalculatorApiBase();
+  if (!apiBase) {
+    return NextResponse.json(
+      {
+        errors: [
+          "The calculator is not connected to a backend yet. The site owner needs to set CALCULATOR_API_URL on Vercel.",
+        ],
+      },
+      { status: 503 }
+    );
+  }
+
   try {
     const body = await request.text();
-    const response = await fetch(`${getCalculatorApiBase()}/api/calculator/plan`, {
+    const response = await fetch(`${apiBase}/api/calculator/plan`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body,
