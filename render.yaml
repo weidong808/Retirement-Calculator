@@ -2,9 +2,12 @@ services:
   - type: web
     name: retirecheck-api
     runtime: docker
+    plan: free
+    region: ohio
+    repo: https://github.com/weidong808/Retirement-Calculator
+    branch: main
     dockerfilePath: ./backend/Dockerfile
     dockerContext: .
-    plan: free
     healthCheckPath: /api/calculator/fra?birthYear=1960
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
