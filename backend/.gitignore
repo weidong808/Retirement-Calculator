@@ -1,0 +1,23 @@
+# ASP.NET Core — backend-specific ignores (root .gitignore also applies)
+
+## User secrets (stored via `dotnet user-secrets` — outside repo, but block local overrides)
+appsettings.local.json
+appsettings.*.local.json
+secrets.json
+
+## Publish / deploy artifacts
+publish/
+*.pubxml.user
+
+## Rider / ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+## Test & coverage
+TestResults/
+*.coverage
+*.coveragexml
+
+## Local HTTP scratch files with tokens (if you add auth headers later)
+*.http.local

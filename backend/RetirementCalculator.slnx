@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RetirementCalculator.Api/RetirementCalculator.Api.csproj" />
+    <Project Path="src/RetirementCalculator.Domain/RetirementCalculator.Domain.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RetirementCalculator.Api.Tests/RetirementCalculator.Api.Tests.csproj" />
+    <Project Path="tests/RetirementCalculator.Domain.Tests/RetirementCalculator.Domain.Tests.csproj" />
+  </Folder>
+</Solution>
