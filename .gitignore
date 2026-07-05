@@ -101,6 +101,7 @@ exports/
 RetirementPlan.xlsx
 
 # --- Misc ---
+.tools/
 *.log
 *.tmp
 *.temp
