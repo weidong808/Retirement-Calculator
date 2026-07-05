@@ -10,8 +10,8 @@ alwaysApply: false
 - **Types** mirror C# DTOs in `frontend/src/types/retirement.ts`; keep in sync when API models change.
 - **Validation:** client-side in `frontend/src/lib/validation.ts` (per wizard step); server validates too.
 - **FRA display:** computed from birth date (`frontend/src/lib/fra.ts`); read-only in Step 4 — do not add manual FRA dropdown.
-- **Wizard:** `CalculatorApp.tsx` (5 steps), `WizardProgress.tsx`, `ResultsSection.tsx` (Recharts).
-- **Styling:** global classes in `frontend/src/app/globals.css` (gradient header, green progress, cards).
-- **Env:** `NEXT_PUBLIC_API_URL` in `.env.local` (from `.env.example`); default `http://localhost:5051`.
+- **Wizard:** `CalculatorApp.tsx` (4 steps), `WizardProgress.tsx`, `ResultsSection.tsx` (Recharts fan chart).
+- **Styling:** global classes in `frontend/src/app/globals.css` (navy-teal gradient, emerald accents, cards).
+- **Env:** `CALCULATOR_API_URL` in `.env.local` (from `.env.example`); dev fallback `http://127.0.0.1:5051`.
 
 Read `frontend/AGENTS.md` before changing Next.js APIs — this project uses Next.js 16.

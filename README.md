@@ -1,6 +1,8 @@
-# Retirement Calculator Pro
+# RetireCheck
 
-Full-stack retirement planning calculator — Next.js frontend + .NET Core backend.
+Free US retirement planning calculator — **live at [retirecheck-wshi.vercel.app](https://retirecheck-wshi.vercel.app)**
+
+4-step wizard → Monte Carlo simulation (1,000 scenarios), Social Security timing, tax/RMD/IRMAA projections, and a downloadable readiness score card. **Estimates only — not financial advice.**
 
 ## Stack
 
@@ -9,48 +11,48 @@ Full-stack retirement planning calculator — Next.js frontend + .NET Core backe
 | UI | Next.js 16, React, TypeScript, Tailwind CSS, Recharts |
 | API | ASP.NET Core 10 Web API |
 | Logic | C# class library (`RetirementCalculator.Domain`) |
-| Tests | xUnit |
+| Tests | xUnit (20 tests) |
+| Deploy | Vercel (frontend) + Render (API) |
 
 ## Project structure
 
 ```
 Retirement Calculator/
-├── frontend/                 # Next.js app
+├── frontend/                 # Next.js app (Vercel)
 │   └── src/
-│       ├── app/              # App router
-│       ├── components/       # Wizard + results UI
-│       ├── lib/              # API client, formatters
-│       └── types/            # Shared TypeScript types
+│       ├── app/              # App router + API proxy route
+│       ├── components/       # Wizard, results, score gauge, share card
+│       ├── lib/              # API client, validation, formatters
+│       └── types/            # Shared TypeScript DTOs
 ├── backend/
 │   ├── src/
-│   │   ├── RetirementCalculator.Api/       # REST API
+│   │   ├── RetirementCalculator.Api/       # REST API (Render)
 │   │   └── RetirementCalculator.Domain/    # Pure calculation logic
 │   └── tests/
-│       ├── RetirementCalculator.Domain.Tests/
-│       └── RetirementCalculator.Api.Tests/
-├── AGENTS.md
-└── .cursor/rules/
+├── AGENTS.md                 # Agent onboarding
+├── ARCHITECTURE.md           # System design + diagrams
+└── .cursor/rules/            # Cursor context rules
 ```
-
-Agent onboarding: see `AGENTS.md` and `.cursor/rules/`.
 
 ## Run locally
 
+**Start both** — calculations fail if the API is not running.
+
 ### 1. Backend API
 
-```bash
+```powershell
 cd backend/src/RetirementCalculator.Api
-dotnet run
+dotnet run --launch-profile http
 ```
 
-API: http://localhost:5051  
-Endpoint: `POST /api/calculator/plan`
+API: http://127.0.0.1:5051
 
 ### 2. Frontend
 
-```bash
+```powershell
 cd frontend
 npm install
+copy .env.example .env.local
 npm run dev
 ```
 
@@ -58,29 +60,35 @@ App: http://localhost:3000
 
 ### 3. Tests
 
-```bash
+```powershell
 cd backend
 dotnet test
 ```
 
+## Environment
+
+Copy `frontend/.env.example` → `frontend/.env.local`:
+
+| Variable | Purpose |
+|----------|---------|
+| `CALCULATOR_API_URL` | Server-only URL for the .NET API (local: `http://127.0.0.1:5051`) |
+
+On Vercel, set `CALCULATOR_API_URL` to your Render API URL in **Project Settings → Environment Variables**.
+
+## Branches
+
+| Branch | Purpose |
+|--------|---------|
+| `main` | Production (Vercel + Render) |
+| `dev` | Day-to-day feature work |
+
 ## API
 
-**POST** `/api/calculator/plan`
+**POST** `/api/calculator/plan` (via Next.js proxy in the browser)
 
-Request body matches `RetirementPlanInput` (camelCase JSON). Returns `RetirementPlanResult` with:
+Returns `RetirementPlanResult`: dashboard summary, age comparison, SS claiming table, Monte Carlo percentiles, year-by-year projection, tax summary, stress test, inflation impact.
 
-- Dashboard summary
-- Age comparison table
-- Social Security claiming comparison
-- Monte Carlo percentiles
-- Year-by-year projection
-- Tax summary, stress test, inflation impact
-
-## Architecture notes
-
-- All calculation logic lives in `RetirementCalculator.Domain` — no math in React components or API controllers.
-- CORS allows `http://localhost:3000` by default (configurable in `appsettings.json`).
-- Frontend mirrors the 5-step wizard and results layout from the HTML prototype.
+All calculation logic lives in `RetirementCalculator.Domain` — no math in React or controllers.
 
 ## Disclaimer
 

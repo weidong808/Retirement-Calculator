@@ -8,7 +8,8 @@ alwaysApply: true
 Monorepo: **Next.js frontend** + **ASP.NET Core API** + **C# domain** (`RetirementCalculator.Domain`).
 
 - **Branches:** `dev` for work, `main` is GitHub default (stable).
-- **Run:** API `backend/src/RetirementCalculator.Api` → `dotnet run --launch-profile http` (:5051). Frontend `frontend` → `npm run dev` (:3000).
+- **Run:** API `backend/src/RetirementCalculator.Api` → `dotnet run --launch-profile http` (:5051). Frontend `frontend` → `npm run dev` (:3000). **Both required for calculations.**
+- **Deploy:** Vercel (frontend, `main`) + Render (API, `main`). Live: retirecheck-wshi.vercel.app
 - **Test:** `cd backend && dotnet test`. **Build:** `cd frontend && npm run build`.
 - **Docs:** `AGENTS.md`, `ARCHITECTURE.md`, `README.md`.
 

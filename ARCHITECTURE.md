@@ -1,13 +1,13 @@
 # Retirement Calculator Pro — Architecture
 
-**Stack:** Next.js + React (UI) · ASP.NET Core (API) · C# Domain (logic)  
+**Product:** [RetireCheck](https://retirecheck-wshi.vercel.app) · **Stack:** Next.js + React (UI) · ASP.NET Core (API) · C# Domain (logic)  
 **Agent guide:** `AGENTS.md` · **Cursor rules:** `.cursor/rules/`
 
 ---
 
 ## 1. Product definition
 
-> US-focused retirement planning calculator: 5-step wizard for personal profile, accounts, income, Social Security, and market/tax settings — with comprehensive results including Monte Carlo, SS claiming comparison, and year-by-year projections.
+> US-focused retirement planning calculator: **4-step wizard** (about you, savings/spending, Social Security, assumptions) → results with animated success gauge, Monte Carlo fan chart, SS claiming comparison, downloadable score card, and year-by-year projections.
 
 ---
 
@@ -15,18 +15,23 @@
 
 ```mermaid
 flowchart TB
-    subgraph Frontend["frontend/ — Next.js + React"]
+    subgraph Browser["Browser"]
+        User[User]
+    end
+
+    subgraph Frontend["frontend/ — Next.js 16 + React (Vercel)"]
         Page[page.tsx]
         Wizard[CalculatorApp]
         Results[ResultsSection]
-        Charts[Recharts]
+        Proxy["/api/calculator/plan route"]
         Page --> Wizard
-        Wizard -->|POST /api/calculator/plan| API
+        Wizard -->|POST same-origin| Proxy
         Wizard --> Results
-        Results --> Charts
+        Results --> Gauge[ScoreGauge]
+        Results --> Charts[Recharts fan chart]
     end
 
-    subgraph Backend["backend/ — ASP.NET Core"]
+    subgraph Backend["backend/ — ASP.NET Core 10 (Render)"]
         API[CalculatorController]
         Engine[RetirementCalculatorEngine]
         API --> Engine
@@ -44,7 +49,12 @@ flowchart TB
         Engine --> IRMAA
         Engine --> MC
     end
+
+    User --> Wizard
+    Proxy -->|CALCULATOR_API_URL| API
 ```
+
+**Rule:** All math lives in `RetirementCalculator.Domain`. React components call the Next.js proxy; controllers delegate to the engine.
 
 ---
 
@@ -54,27 +64,32 @@ flowchart TB
 Retirement Calculator/
 ├── frontend/                          # Next.js 16, TypeScript, Tailwind
 │   └── src/
-│       ├── app/                       # Routes, global styles
+│       ├── app/
+│       │   ├── api/calculator/plan/   # Server-side proxy to .NET API
+│       │   ├── opengraph-image.tsx    # Social share preview image
+│       │   └── globals.css            # Emerald/teal design system
 │       ├── components/
-│       │   ├── CalculatorApp.tsx      # 5-step wizard (mirrors HTML)
-│       │   ├── ResultsSection.tsx     # Dashboard, tables, charts
+│       │   ├── CalculatorApp.tsx      # 4-step wizard + sample plan demo
+│       │   ├── ResultsSection.tsx     # Dashboard, tables, fan chart
+│       │   ├── ScoreGauge.tsx         # Animated success-rate ring
+│       │   ├── ShareCardButton.tsx    # Downloadable PNG score card
 │       │   └── WizardProgress.tsx
 │       ├── lib/
-│       │   ├── api.ts                 # API client
-│       │   └── format.ts              # Currency / percent
-│       └── types/retirement.ts        # DTOs matching C# models
+│       │   ├── api.ts                 # Client → Next.js proxy
+│       │   ├── calculatorApiUrl.ts    # Server-only API base URL
+│       │   └── format.ts
+│       └── types/retirement.ts
 │
 ├── backend/
 │   ├── src/
 │   │   ├── RetirementCalculator.Api/  # REST API, CORS, DI
 │   │   └── RetirementCalculator.Domain/
-│   │       ├── Models/                # Input / Result records
+│   │       ├── Models/
 │   │       └── Services/              # Pure calculation logic
 │   └── tests/
+│       ├── RetirementCalculator.Domain.Tests/
 │       └── RetirementCalculator.Api.Tests/
 ```
-
-**Rule:** All math lives in `RetirementCalculator.Domain`. React components call the API; controllers delegate to the engine.
 
 ---
 
@@ -83,93 +98,112 @@ Retirement Calculator/
 | Method | Path | Body | Response |
 |--------|------|------|----------|
 | POST | `/api/calculator/plan` | `RetirementPlanInput` (JSON, camelCase) | `RetirementPlanResult` |
+| GET | `/api/calculator/fra?birthDate=YYYY-MM-DD` | — | FRA lookup |
+
+**Browser path:** `POST /api/calculator/plan` (Next.js route) → `${CALCULATOR_API_URL}/api/calculator/plan` (Render).
 
 Enums serialize as strings (`Single`, `Married`, `TCJA`, `PreTCJA`).
 
 ---
 
-## 5. Logic ported from HTML prototype
+## 5. Domain logic (ported from HTML prototype)
 
-| Module | C# Service | HTML source |
-|--------|-----------|-------------|
-| SS benefit adjustments | `SocialSecurityCalculator` | `getSocialSecurityBenefit()` |
-| Breakeven | `SocialSecurityCalculator.GetBreakeven()` | Fixed cumulative logic |
-| RMD | `RmdCalculator` | `RMD_TABLE`, `getRMD()` |
-| Federal tax | `TaxCalculator` | `TAX_BRACKETS_2026` |
-| SS taxation | `TaxCalculator.CalculateTaxableSocialSecurity()` | `calculateSSIncome()` |
-| IRMAA | `IrmaaCalculator` | `calculateIRMAA()` |
-| Monte Carlo | `MonteCarloSimulator` | `runMonteCarloSimulation()` |
-| Orchestration | `RetirementCalculatorEngine` | `calculatePlan()` |
+| Module | C# Service |
+|--------|-----------|
+| SS benefit adjustments | `SocialSecurityCalculator` |
+| Breakeven | `SocialSecurityCalculator.GetBreakeven()` |
+| RMD | `RmdCalculator` |
+| Federal tax | `TaxCalculator` |
+| SS taxation | `TaxCalculator.CalculateTaxableSocialSecurity()` |
+| IRMAA | `IrmaaCalculator` |
+| Monte Carlo (1,000 runs) | `MonteCarloSimulator` |
+| Orchestration | `RetirementCalculatorEngine` |
 
 ---
 
-## 6. UI parity with HTML prototype
+## 6. UI features
 
-| HTML feature | React implementation |
-|--------------|---------------------|
-| 5-step progress bar | `WizardProgress.tsx` |
-| Step 1–5 forms | `CalculatorApp.tsx` |
-| Dashboard cards | `ResultsSection.tsx` |
-| Age / SS comparison tables | `ResultsSection.tsx` |
-| Monte Carlo charts | Recharts pie + line |
-| Portfolio / tax / stress charts | Recharts |
+| Feature | Implementation |
+|---------|----------------|
+| 4-step wizard | `CalculatorApp.tsx` + `WizardProgress.tsx` |
+| One-click sample plan | `buildSampleForm()` in `CalculatorApp.tsx` |
+| Animated success gauge | `ScoreGauge.tsx` |
+| Monte Carlo fan chart (P10–P90 band) | `ResultsSection.tsx` (Recharts `ComposedChart`) |
+| Portfolio / tax / stress charts | `ResultsSection.tsx` |
+| Download score card PNG | `ShareCardButton.tsx` |
+| Open Graph preview | `opengraph-image.tsx` |
 | Recommendations + disclaimer | `ResultsSection.tsx` |
-| Excel export | Not yet ported (v1.1) |
+| Excel export | Not yet ported |
 
 ---
 
 ## 7. Run locally
 
-```bash
+**Both processes are required** — the frontend proxies to the API.
+
+```powershell
 # Terminal 1 — API
 cd backend/src/RetirementCalculator.Api
 dotnet run --launch-profile http
 
 # Terminal 2 — Frontend
 cd frontend
-npm install
+npm install   # first time only
+cp .env.example .env.local   # or copy on Windows
 npm run dev
 ```
 
-- API: http://localhost:5051  
 - App: http://localhost:3000  
-- CORS: configured for localhost:3000 in `appsettings.json`
+- API: http://127.0.0.1:5051  
+- Env: `CALCULATOR_API_URL=http://127.0.0.1:5051` in `frontend/.env.local`
 
 ---
 
-## 8. Testing
+## 8. Deployment
+
+| Service | Host | Branch | Config |
+|---------|------|--------|--------|
+| Frontend | Vercel | `main` (production) | `frontend/vercel.json`, `CALCULATOR_API_URL` env var |
+| API | Render | `main` | `render.yaml`, Docker |
+
+Live: **https://retirecheck-wshi.vercel.app**
+
+---
+
+## 9. Testing
 
 ```bash
 cd backend
 dotnet test
 ```
 
-Tests cover SS benefit logic and full engine integration.
+20 tests cover domain logic (SS, FRA, validation) and API integration. CI runs on `dev` and `main` via GitHub Actions.
 
 ---
 
-## 9. Backlog
+## 10. Backlog
 
 ### Done
-- [x] Wizard step validation (client + server)
-- [x] FRA auto-derived from birth date
-- [x] API integration tests + GitHub Actions CI
-- [x] Secret-safe gitignore + `.env.example`
-
-### Must (next)
-- [ ] Excel export
+- [x] 4-step wizard + results with Recharts
+- [x] C# domain port (SS, RMD, tax, IRMAA, Monte Carlo)
+- [x] Birth-date FRA, step validation, API validation
+- [x] Next.js API proxy (no browser → backend CORS popup)
+- [x] Vercel frontend + Render API deployment
+- [x] UI polish: score gauge, fan chart, sample plan, share card, OG image
+- [x] CI + secret-safe gitignore
 
 ### Should
-- [ ] Docker Compose for API + frontend
-- [ ] OpenAPI client generation for TypeScript
+- [ ] Excel export
+- [ ] Docker Compose for local API + frontend
+- [ ] OpenAPI → TypeScript client generation
 - [ ] More unit tests (tax brackets, RMD edge cases)
 
 ### Won't (for now)
-- iOS native app (superseded by web stack per user direction)
 - User accounts / cloud persistence
+- Non-US tax rules
 
 ---
 
-## 10. Disclaimer
+## 11. Disclaimer
 
 Estimates only. Not financial advice. Link to [SSA.gov](https://www.ssa.gov/planners/retire/) included in results.

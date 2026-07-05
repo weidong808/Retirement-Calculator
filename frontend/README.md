@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend — RetireCheck
 
-## Getting Started
+Next.js 16 app for the retirement calculator wizard and results UI.
 
-First, run the development server:
+**Live:** https://retirecheck-wshi.vercel.app · **Root docs:** [`../README.md`](../README.md), [`../AGENTS.md`](../AGENTS.md)
 
-```bash
+## Run
+
+Requires the .NET API running separately (see root README).
+
+```powershell
+cd frontend
+npm install
+copy .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/
+│   ├── api/calculator/plan/   # Proxies to .NET API (CALCULATOR_API_URL)
+│   ├── opengraph-image.tsx    # LinkedIn/social preview image
+│   └── globals.css            # Emerald/teal design system
+├── components/
+│   ├── CalculatorApp.tsx      # 4-step wizard + sample plan
+│   ├── ResultsSection.tsx     # Charts, tables, fan chart
+│   ├── ScoreGauge.tsx         # Animated success-rate ring
+│   └── ShareCardButton.tsx    # Downloadable score card PNG
+├── lib/                       # api.ts, validation.ts, format.ts
+└── types/retirement.ts        # DTOs matching C# models
+```
 
-## Learn More
+## Commands
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run dev      # development
+npm run build    # production check
+npm run lint     # eslint
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy (Vercel)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Production branch:** `main`
+- **Env var:** `CALCULATOR_API_URL` → Render API URL
+- Config: `vercel.json`
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See [`../ARCHITECTURE.md`](../ARCHITECTURE.md) for the full system diagram.
