@@ -106,3 +106,6 @@ RetirementPlan.xlsx
 *.tmp
 *.temp
 *.bak
+
+# --- Local-only personal notes (not for repo) ---
+LinkedIn-Article-Cursor-in-Action.md
