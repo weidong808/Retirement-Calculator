@@ -21,6 +21,11 @@ export function AppFooter() {
             LinkedIn
           </a>
         )}
+        {profile.sourceRepo && (
+          <a href={profile.sourceRepo} target="_blank" rel="noopener noreferrer">
+            Source on GitHub
+          </a>
+        )}
       </nav>
       <p className="app-footer-disclaimer">
         Estimates only — not financial advice. Your data is not stored.
