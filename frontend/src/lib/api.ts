@@ -1,7 +1,5 @@
 import type { RetirementPlanInput, RetirementPlanResult } from "@/types/retirement";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5051";
-
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -15,7 +13,7 @@ export class ApiError extends Error {
 export async function calculatePlan(
   input: RetirementPlanInput
 ): Promise<RetirementPlanResult> {
-  const response = await fetch(`${API_BASE}/api/calculator/plan`, {
+  const response = await fetch("/api/calculator/plan", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
