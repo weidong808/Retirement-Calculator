@@ -21,8 +21,12 @@ export function DeveloperSection() {
       <h3 className="about-developer-connect-heading">Get in touch</h3>
       <div className="about-developer-links">
         {profile.email && (
-          <a href={`mailto:${profile.email}`} className="about-developer-link">
-            ✉ {profile.email}
+          <a
+            href={`mailto:${profile.email}`}
+            className="about-developer-link"
+            aria-label={`Contact via email at ${profile.email}`}
+          >
+            ✉ Email
           </a>
         )}
         {profile.linkedIn && (
