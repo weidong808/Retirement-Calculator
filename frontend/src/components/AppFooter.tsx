@@ -22,18 +22,6 @@ export function AppFooter() {
           </a>
         )}
       </nav>
-      <p className="app-footer-built">
-        Built by{" "}
-        {profile.linkedIn ? (
-          <a href={profile.linkedIn} target="_blank" rel="noopener noreferrer">
-            {profile.name}
-          </a>
-        ) : (
-          <a href={profile.githubProfile} target="_blank" rel="noopener noreferrer">
-            {profile.name}
-          </a>
-        )}
-      </p>
       <p className="app-footer-disclaimer">
         Estimates only — not financial advice. Your data is not stored.
       </p>
