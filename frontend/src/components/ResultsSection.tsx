@@ -5,9 +5,8 @@ import {
   Line,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
+  Area,
+  ComposedChart,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -16,8 +15,24 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
+import { CountUpValue, ScoreGauge } from "@/components/ScoreGauge";
+import { ShareCardButton } from "@/components/ShareCardButton";
 import type { RetirementPlanResult } from "@/types/retirement";
 import { formatCurrency, formatPercent } from "@/lib/format";
+
+/** Axis / tooltip helpers — values stored in millions or thousands. */
+const tickM = (v: number) => `$${v}M`;
+const tickK = (v: number) => `$${v}k`;
+const tipM = (v: unknown) => formatCurrency(Number(v ?? 0) * 1_000_000);
+const tipK = (v: unknown) => formatCurrency(Number(v ?? 0) * 1_000);
+const fmtM = (v: unknown, name: unknown) => [tipM(v), String(name ?? "")] as [string, string];
+const fmtK = (v: unknown, name: unknown) => [tipK(v), String(name ?? "")] as [string, string];
+const chartTooltipStyle = {
+  borderRadius: 10,
+  border: "1px solid #e2e8f0",
+  boxShadow: "0 8px 24px rgba(15, 40, 70, 0.12)",
+  fontSize: 13,
+} as const;
 
 interface ResultsSectionProps {
   result: RetirementPlanResult;
@@ -26,8 +41,6 @@ interface ResultsSectionProps {
   onEditAnswers?: () => void;
   onStartOver?: () => void;
 }
-
-const PIE_COLORS = ["#059669", "#e2e8f0"];
 
 function successCategory(rate: number) {
   if (rate > 90) return { label: "Strong", headline: "Your plan looks solid", detail: "High chance your savings may last through your planning horizon." };
@@ -49,10 +62,13 @@ export function ResultsSection({
   const percentileData = Object.entries(monteCarlo.percentiles)
     .slice(0, 31)
     .map(([year, band]) => ({
-      age: 45 + Number(year),
+      age: summary.yourAge + Number(year),
       p10: band.p10 / 1_000_000,
       p50: band.p50 / 1_000_000,
       p90: band.p90 / 1_000_000,
+      // stacked band: invisible base at p10, shaded height = p90 − p10
+      bandBase: band.p10 / 1_000_000,
+      bandHeight: (band.p90 - band.p10) / 1_000_000,
     }));
 
   const portfolioData = result.yearByYear.map((row) => ({
@@ -77,14 +93,16 @@ export function ResultsSection({
     stress: row.stress / 1_000_000,
   }));
 
-  const pieData = [
-    { name: "May last", value: summary.successRate },
-    { name: "May run out", value: Math.max(0, 100 - summary.successRate) },
-  ];
-
   return (
     <div className="results-section">
       <div className="results-toolbar">
+        <ShareCardButton
+          successRate={summary.successRate}
+          outlookLabel={success.label}
+          portfolioAtRetirement={result.portfolioAtRetirement}
+          targetRetirementAge={targetRetirementAge}
+          claimAge={summary.claimAge}
+        />
         {onEditAnswers && (
           <button type="button" className="btn-outline" onClick={onEditAnswers}>
             Edit my answers
@@ -99,11 +117,9 @@ export function ResultsSection({
 
       <div className="results-hero">
         <div className="results-hero-top">
-          <div className="results-hero-score">
-            <span className="results-hero-score-value">{formatPercent(summary.successRate, 0)}</span>
-            <span className="results-hero-score-label">May last</span>
-          </div>
+          <ScoreGauge rate={summary.successRate} />
           <div className="results-hero-headline">
+            <span className="results-hero-badge">{success.label} outlook · 1,000 simulations</span>
             <h2>{success.headline}</h2>
             <p>{success.detail}</p>
           </div>
@@ -111,15 +127,21 @@ export function ResultsSection({
         <div className="results-hero-stats">
           <div className="results-hero-stat">
             <div className="results-hero-stat-label">At retirement (age {targetRetirementAge})</div>
-            <div className="results-hero-stat-value">{formatCurrency(result.portfolioAtRetirement)}</div>
+            <div className="results-hero-stat-value">
+              <CountUpValue value={result.portfolioAtRetirement} format={formatCurrency} />
+            </div>
           </div>
           <div className="results-hero-stat">
             <div className="results-hero-stat-label">Yearly spending</div>
-            <div className="results-hero-stat-value">{formatCurrency(summary.annualSpending)}</div>
+            <div className="results-hero-stat-value">
+              <CountUpValue value={summary.annualSpending} format={formatCurrency} />
+            </div>
           </div>
           <div className="results-hero-stat">
             <div className="results-hero-stat-label">Left at age 90 (typical)</div>
-            <div className="results-hero-stat-value">{formatCurrency(summary.estateAt90)}</div>
+            <div className="results-hero-stat-value">
+              <CountUpValue value={summary.estateAt90} format={formatCurrency} />
+            </div>
           </div>
           <div className="results-hero-stat">
             <div className="results-hero-stat-label">Social Security start</div>
@@ -249,38 +271,58 @@ export function ResultsSection({
         )}
       </CollapsibleSection>
 
-      <CollapsibleSection title="Market uncertainty (1,000 scenarios)" hint="How your savings might grow or shrink">
-        <div className="chart-grid">
-          <div className="chart-box">
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart>
-                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={90}>
-                  {pieData.map((_, i) => (
-                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(v) => formatPercent(Number(v))} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-            <p className="text-center text-sm text-[#64748b]">
-              In {formatPercent(summary.successRate)} of scenarios, savings lasted through the plan
-            </p>
-          </div>
-          <div className="chart-box">
-            <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={percentileData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="age" />
-                <YAxis unit="M" />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="p90" stroke="#059669" dot={false} name="Best 10%" />
-                <Line type="monotone" dataKey="p50" stroke="#2563eb" dot={false} name="Typical" strokeWidth={2} />
-                <Line type="monotone" dataKey="p10" stroke="#dc2626" dot={false} name="Worst 10%" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+      <CollapsibleSection
+        title="Market uncertainty (1,000 scenarios)"
+        hint="How your savings might grow or shrink"
+        defaultOpen
+      >
+        <p className="section-desc">
+          In {formatPercent(summary.successRate)} of 1,000 simulated markets, your savings lasted
+          through the plan. The shaded band covers the middle 80% of outcomes.
+        </p>
+        <div className="chart-box">
+          <ResponsiveContainer width="100%" height={320}>
+            <ComposedChart data={percentileData}>
+              <defs>
+                <linearGradient id="fanBand" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity={0.06} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
+              <XAxis dataKey="age" tickLine={false} axisLine={{ stroke: "#e2e8f0" }} label={{ value: "Age", position: "insideBottomRight", offset: -4, fontSize: 12 }} />
+              <YAxis tickFormatter={tickM} tickLine={false} axisLine={false} width={56} />
+              <Tooltip
+                contentStyle={chartTooltipStyle}
+                formatter={(v: unknown, name: unknown) =>
+                  String(name) === "Range (best–worst 10%)" ? fmtM(v, "Middle 80% band") : fmtM(v, name)
+                }
+                labelFormatter={(age) => `Age ${age}`}
+              />
+              <Legend />
+              <Area
+                type="monotone"
+                dataKey="bandBase"
+                stackId="band"
+                stroke="none"
+                fill="transparent"
+                legendType="none"
+                isAnimationActive={false}
+                name=" "
+              />
+              <Area
+                type="monotone"
+                dataKey="bandHeight"
+                stackId="band"
+                stroke="none"
+                fill="url(#fanBand)"
+                name="Range (best–worst 10%)"
+              />
+              <Line type="monotone" dataKey="p90" stroke="#10b981" dot={false} strokeWidth={1.5} strokeDasharray="4 4" name="Best 10%" />
+              <Line type="monotone" dataKey="p50" stroke="#0f766e" dot={false} strokeWidth={2.5} name="Typical outcome" />
+              <Line type="monotone" dataKey="p10" stroke="#ef4444" dot={false} strokeWidth={1.5} strokeDasharray="4 4" name="Worst 10%" />
+            </ComposedChart>
+          </ResponsiveContainer>
         </div>
       </CollapsibleSection>
 
@@ -288,14 +330,14 @@ export function ResultsSection({
         <div className="chart-box">
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={portfolioData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="age" />
-              <YAxis unit="M" />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
+              <XAxis dataKey="age" tickLine={false} axisLine={{ stroke: "#e2e8f0" }} />
+              <YAxis tickFormatter={tickM} tickLine={false} axisLine={false} width={56} />
+              <Tooltip contentStyle={chartTooltipStyle} formatter={fmtM} labelFormatter={(age) => `Age ${age}`} />
               <Legend />
-              <Line type="monotone" dataKey="preTax" stroke="#2563eb" dot={false} name="401k / IRA" />
-              <Line type="monotone" dataKey="roth" stroke="#059669" dot={false} name="Roth" />
-              <Line type="monotone" dataKey="taxable" stroke="#f59e0b" dot={false} name="Brokerage" />
+              <Line type="monotone" dataKey="preTax" stroke="#0f766e" dot={false} strokeWidth={2} name="401k / IRA" />
+              <Line type="monotone" dataKey="roth" stroke="#10b981" dot={false} strokeWidth={2} name="Roth" />
+              <Line type="monotone" dataKey="taxable" stroke="#f59e0b" dot={false} strokeWidth={2} name="Brokerage" />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -305,13 +347,13 @@ export function ResultsSection({
         <div className="chart-box mb-4">
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={taxData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="age" />
-              <YAxis unit="k" />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
+              <XAxis dataKey="age" tickLine={false} axisLine={{ stroke: "#e2e8f0" }} />
+              <YAxis tickFormatter={tickK} tickLine={false} axisLine={false} width={56} />
+              <Tooltip contentStyle={chartTooltipStyle} formatter={fmtK} labelFormatter={(age) => `Age ${age}`} />
               <Legend />
-              <Bar dataKey="federal" stackId="a" fill="#2563eb" name="Federal tax ($k)" />
-              <Bar dataKey="medicare" stackId="a" fill="#f59e0b" name="Medicare surcharge ($k)" />
+              <Bar dataKey="federal" stackId="a" fill="#0f766e" name="Federal tax" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="medicare" stackId="a" fill="#f59e0b" name="Medicare surcharge" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -331,13 +373,13 @@ export function ResultsSection({
         <div className="chart-box">
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={stressData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="year" />
-              <YAxis unit="M" />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
+              <XAxis dataKey="year" tickLine={false} axisLine={{ stroke: "#e2e8f0" }} />
+              <YAxis tickFormatter={tickM} tickLine={false} axisLine={false} width={56} />
+              <Tooltip contentStyle={chartTooltipStyle} formatter={fmtM} labelFormatter={(y) => `Year ${y}`} />
               <Legend />
-              <Line type="monotone" dataKey="base" stroke="#059669" dot={false} name="Normal market" strokeWidth={2} />
-              <Line type="monotone" dataKey="stress" stroke="#dc2626" dot={false} name="30% drop in year 1" strokeDasharray="5 5" strokeWidth={2} />
+              <Line type="monotone" dataKey="base" stroke="#10b981" dot={false} name="Normal market" strokeWidth={2.5} />
+              <Line type="monotone" dataKey="stress" stroke="#ef4444" dot={false} name="30% drop in year 1" strokeDasharray="5 5" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </div>

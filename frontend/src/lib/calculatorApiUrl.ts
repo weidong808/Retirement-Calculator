@@ -5,7 +5,8 @@ export function getCalculatorApiBase(): string | null {
     return url.replace(/\/$/, "");
   }
   if (process.env.NODE_ENV === "development") {
-    return "http://localhost:5051";
+    // Use 127.0.0.1 — on Windows, "localhost" can resolve to IPv6 while Kestrel listens on IPv4.
+    return "http://127.0.0.1:5051";
   }
   return null;
 }

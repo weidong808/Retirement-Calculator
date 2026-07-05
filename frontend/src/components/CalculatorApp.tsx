@@ -36,6 +36,36 @@ import {
 
 const TOTAL_STEPS = 4;
 
+function localDateString(year: number, month: number, day: number): string {
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/** Realistic demo profile — lets visitors see full results in one click. */
+function buildSampleForm(): FormState {
+  const today = new Date();
+  return {
+    ...defaultFormState,
+    birthDate: localDateString(today.getFullYear() - 55, today.getMonth() + 1, today.getDate()),
+    maritalStatus: "Single",
+    state: "California",
+    targetRetirementAge: "65",
+    lifeExpectancy: "90",
+    traditional401k: "625000",
+    roth401k: "175000",
+    taxableBrokerage: "175000",
+    hsa: "37500",
+    annualPreTax401k: "19000",
+    annualRothContribution: "7500",
+    householdIncome: "175000",
+    retirementSpending: "90000",
+    travelBudget: "7500",
+    pensionIncome: "0",
+    yourMonthlySsFra: "2750",
+    yourClaimAge: "67",
+    stateIncomeTax: getStateTaxRate("California"),
+  };
+}
+
 function Field({
   label,
   children,
@@ -167,6 +197,27 @@ export function CalculatorApp() {
     window.scrollTo(0, 0);
   };
 
+  const runCalculation = async (formToRun: FormState) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const input = formToInput(formToRun);
+      const plan = await calculatePlan(input);
+      setResult(plan);
+      setTimeout(() => {
+        document.getElementById("results")?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } catch (e) {
+      if (e instanceof ApiError) {
+        setError(e.errors.join(" "));
+      } else {
+        setError(e instanceof Error ? e.message : "Calculation failed");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCalculate = async () => {
     for (let s = 1; s <= TOTAL_STEPS; s++) {
       const errors = validateStep(s, form);
@@ -177,25 +228,14 @@ export function CalculatorApp() {
         return;
       }
     }
+    await runCalculation(form);
+  };
 
-    setLoading(true);
-    setError(null);
-    try {
-      const input = formToInput(form);
-      const plan = await calculatePlan(input);
-      setResult(plan);
-      setTimeout(() => {
-        document.getElementById("results")?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    } catch (e) {
-      if (e instanceof ApiError && e.errors.length > 1) {
-        setError(e.errors.join(" "));
-      } else {
-        setError(e instanceof Error ? e.message : "Calculation failed");
-      }
-    } finally {
-      setLoading(false);
-    }
+  const handleSamplePlan = async () => {
+    const sample = buildSampleForm();
+    setForm(sample);
+    setStepErrors({});
+    await runCalculation(sample);
   };
 
   return (
@@ -212,7 +252,8 @@ export function CalculatorApp() {
         {loading && (
           <div className="loading-overlay" aria-live="polite">
             <div className="loading-spinner" />
-            <p>Running your retirement projection…</p>
+            <p className="loading-title">Simulating 1,000 market scenarios…</p>
+            <p className="loading-subtitle">Taxes · Social Security · RMDs · Medicare</p>
           </div>
         )}
         {step === 1 && (
@@ -221,6 +262,14 @@ export function CalculatorApp() {
               title="About you"
               subtitle="Basic details so we can estimate your timeline."
             />
+            {!result && (
+              <div className="sample-plan-banner">
+                <span>Just curious? Skip the form —</span>
+                <button type="button" className="sample-plan-button" onClick={handleSamplePlan} disabled={loading}>
+                  See a sample result →
+                </button>
+              </div>
+            )}
             <div className="form-grid">
               <Field label="When were you born?" error={stepErrors.birthDate}>
                 <Input type="date" value={form.birthDate} onChange={(e) => update("birthDate", e.target.value)} />
