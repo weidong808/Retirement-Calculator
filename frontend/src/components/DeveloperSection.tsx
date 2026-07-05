@@ -1,4 +1,4 @@
-import { developerInitials, getDeveloperProfile } from "@/lib/developer";
+import { buildFeedbackMailto, developerInitials, getDeveloperProfile } from "@/lib/developer";
 
 export function DeveloperSection() {
   const profile = getDeveloperProfile();
@@ -47,22 +47,14 @@ export function DeveloperSection() {
         >
           GitHub profile ↗
         </a>
-        <a
-          href={profile.githubRepo}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="about-developer-link"
-        >
-          View source ↗
-        </a>
-        <a
-          href={profile.feedbackUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="about-developer-link about-developer-link-accent"
-        >
-          Send feedback ↗
-        </a>
+        {profile.email && (
+          <a
+            href={buildFeedbackMailto(profile.email)}
+            className="about-developer-link about-developer-link-accent"
+          >
+            Send feedback
+          </a>
+        )}
       </div>
 
       {!profile.email && (

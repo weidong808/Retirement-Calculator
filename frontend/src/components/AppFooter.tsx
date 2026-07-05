@@ -13,12 +13,8 @@ export function AppFooter() {
         <a href="https://www.ssa.gov/planners/retire/" target="_blank" rel="noopener noreferrer">
           SSA.gov
         </a>
-        {profile.email ? (
+        {profile.email && (
           <a href={`mailto:${profile.email}`}>Contact</a>
-        ) : (
-          <a href={profile.feedbackUrl} target="_blank" rel="noopener noreferrer">
-            Feedback
-          </a>
         )}
         {profile.linkedIn && (
           <a href={profile.linkedIn} target="_blank" rel="noopener noreferrer">
