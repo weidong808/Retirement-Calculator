@@ -15,6 +15,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 import type { RetirementPlanResult } from "@/types/retirement";
 import { formatCurrency, formatPercent } from "@/lib/format";
 
@@ -22,20 +23,25 @@ interface ResultsSectionProps {
   result: RetirementPlanResult;
   targetRetirementAge: number;
   maritalStatus: string;
+  onEditAnswers?: () => void;
+  onStartOver?: () => void;
 }
 
-const PIE_COLORS = ["#059669", "#f59e0b", "#f97316", "#dc2626"];
+const PIE_COLORS = ["#059669", "#e2e8f0"];
 
 function successCategory(rate: number) {
-  if (rate > 90) return { label: "Excellent", color: "success" as const };
-  if (rate > 75) return { label: "Good", color: "warning" as const };
-  return { label: "Fair", color: "danger" as const };
+  if (rate > 90) return { label: "Strong", headline: "Your plan looks solid", detail: "High chance your savings may last through your planning horizon." };
+  if (rate > 75) return { label: "Good", headline: "Your plan looks reasonable", detail: "A decent chance of success, but small changes could help." };
+  if (rate > 50) return { label: "Fair", headline: "Your plan may need adjustments", detail: "Consider saving more, spending less, or retiring later." };
+  return { label: "At risk", headline: "Your plan may fall short", detail: "Review spending, savings rate, or retirement timing." };
 }
 
 export function ResultsSection({
   result,
   targetRetirementAge,
   maritalStatus,
+  onEditAnswers,
+  onStartOver,
 }: ResultsSectionProps) {
   const { summary, monteCarlo } = result;
   const success = successCategory(summary.successRate);
@@ -45,9 +51,7 @@ export function ResultsSection({
     .map(([year, band]) => ({
       age: 45 + Number(year),
       p10: band.p10 / 1_000_000,
-      p25: band.p25 / 1_000_000,
       p50: band.p50 / 1_000_000,
-      p75: band.p75 / 1_000_000,
       p90: band.p90 / 1_000_000,
     }));
 
@@ -64,7 +68,7 @@ export function ResultsSection({
     .map((row) => ({
       age: row.age,
       federal: row.federalTax / 1000,
-      irmaa: row.irmaa / 1000,
+      medicare: row.irmaa / 1000,
     }));
 
   const stressData = result.stressTest.map((row) => ({
@@ -74,285 +78,320 @@ export function ResultsSection({
   }));
 
   const pieData = [
-    { name: "Success", value: summary.successRate },
-    { name: "Remaining", value: Math.max(0, 100 - summary.successRate) },
+    { name: "May last", value: summary.successRate },
+    { name: "May run out", value: Math.max(0, 100 - summary.successRate) },
   ];
 
   return (
-    <div className="bg-[#f9fafb] p-6 sm:p-10">
-      <h2 className="section-title">Your Retirement Plan Summary</h2>
-      <div className="dashboard-cards">
-        <div className="card success">
-          <div className="card-label">Portfolio Longevity</div>
-          <div className="card-value">{summary.lifeExpectancy}</div>
-          <div className="card-subtext">Projected to last until age {summary.lifeExpectancy}</div>
-        </div>
-        <div className={`card ${success.color}`}>
-          <div className="card-label">Success Probability</div>
-          <div className="card-value">{formatPercent(summary.successRate)}</div>
-          <div className="card-subtext">{success.label} success rate</div>
-        </div>
-        <div className="card success">
-          <div className="card-label">Full Retirement Age</div>
-          <div className="card-value">{summary.fullRetirementAgeLabel}</div>
-          <div className="card-subtext">SSA FRA for your birth year · age {summary.yourAge} today</div>
-        </div>
-        <div className="card success">
-          <div className="card-label">Optimal SS Claim</div>
-          <div className="card-value">{summary.claimAge}</div>
-          <div className="card-subtext">Your planned claiming age</div>
-        </div>
-        <div className="card success">
-          <div className="card-label">Portfolio at Retirement</div>
-          <div className="card-value">{formatCurrency(result.portfolioAtRetirement)}</div>
-          <div className="card-subtext">Projected total balance</div>
-        </div>
-        <div className="card success">
-          <div className="card-label">Annual Spending</div>
-          <div className="card-value">{formatCurrency(summary.annualSpending)}</div>
-          <div className="card-subtext">Projected retirement spending</div>
-        </div>
-        <div className="card success">
-          <div className="card-label">Estate at 90</div>
-          <div className="card-value">{formatCurrency(summary.estateAt90)}</div>
-          <div className="card-subtext">Median portfolio projection</div>
-        </div>
+    <div className="results-section">
+      <div className="results-toolbar">
+        {onEditAnswers && (
+          <button type="button" className="btn-outline" onClick={onEditAnswers}>
+            Edit my answers
+          </button>
+        )}
+        {onStartOver && (
+          <button type="button" className="btn-secondary" onClick={onStartOver}>
+            Start over
+          </button>
+        )}
       </div>
 
-      <h2 className="section-title">Age-Based Retirement Comparison</h2>
-      <p className="text-[#666] mb-4">Explore how retiring at different ages affects your plan&apos;s success:</p>
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Retire Age</th>
-              <th>Portfolio at Retirement</th>
-              <th>Years Funding Needed</th>
-              <th>Monthly Income Available</th>
-              <th>Healthcare Gap (yrs pre-65)</th>
-              <th>Monte Carlo Success %</th>
-              <th>Estate at Age 90</th>
-            </tr>
-          </thead>
-          <tbody>
-            {result.ageComparison.map((row) => (
-              <tr key={row.age} className={row.age === targetRetirementAge ? "highlighted" : ""}>
-                <td>{row.age}</td>
-                <td>{formatCurrency(row.portfolio)}</td>
-                <td>{row.yearsNeeded}</td>
-                <td>{formatCurrency(row.monthlyIncome)}</td>
-                <td>{row.healthcareGap}</td>
-                <td>{formatPercent(row.successRate)}</td>
-                <td>{formatCurrency(row.estate)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <h2 className="section-title">Social Security Claiming Comparison</h2>
-      <p className="text-[#666] mb-4">Your Social Security Benefits</p>
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Claim Age</th>
-              <th>Monthly Benefit</th>
-              <th>Annual Benefit</th>
-              <th>Lifetime to 85</th>
-              <th>Lifetime to 90</th>
-              <th>Breakeven vs FRA</th>
-              <th>vs Age 70</th>
-            </tr>
-          </thead>
-          <tbody>
-            {result.yourSsClaiming.map((row) => (
-              <tr key={row.claimAge} className={row.claimAge === summary.claimAge ? "highlighted" : ""}>
-                <td>{row.claimAge}</td>
-                <td>{formatCurrency(row.monthlyBenefit)}</td>
-                <td>{formatCurrency(row.annualBenefit)}</td>
-                <td>{formatCurrency(row.lifetimeTo85)}</td>
-                <td>{formatCurrency(row.lifetimeTo90)}</td>
-                <td>{row.breakeven}</td>
-                <td>{row.vs70}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="breakeven-box">
-        Breakeven occurs when cumulative benefits from the earlier claim age equal the later claim age.
-      </div>
-
-      {maritalStatus === "Married" && result.spouseSsClaiming.length > 0 && (
-        <>
-          <p className="text-[#666] mb-4 mt-8">Spouse&apos;s Social Security Benefits</p>
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Claim Age</th>
-                  <th>Monthly Benefit</th>
-                  <th>Annual Benefit</th>
-                  <th>Lifetime to 85</th>
-                  <th>Lifetime to 90</th>
-                  <th>Breakeven vs FRA</th>
-                  <th>vs Age 70</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.spouseSsClaiming.map((row) => (
-                  <tr key={row.claimAge}>
-                    <td>{row.claimAge}</td>
-                    <td>{formatCurrency(row.monthlyBenefit)}</td>
-                    <td>{formatCurrency(row.annualBenefit)}</td>
-                    <td>{formatCurrency(row.lifetimeTo85)}</td>
-                    <td>{formatCurrency(row.lifetimeTo90)}</td>
-                    <td>{row.breakeven}</td>
-                    <td>{row.vs70}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <div className="results-hero">
+        <div className="results-hero-top">
+          <div className="results-hero-score">
+            <span className="results-hero-score-value">{formatPercent(summary.successRate, 0)}</span>
+            <span className="results-hero-score-label">May last</span>
           </div>
-        </>
-      )}
-
-      <h2 className="section-title">Monte Carlo Simulation Results</h2>
-      <div className="chart-grid">
-        <div className="chart-box">
-          <ResponsiveContainer width="100%" height={320}>
-            <PieChart>
-              <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={100}>
-                {pieData.map((_, i) => (
-                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(v) => formatPercent(Number(v))} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-          <p className="text-center text-sm text-[#666]">Success rate: {formatPercent(summary.successRate)}</p>
+          <div className="results-hero-headline">
+            <h2>{success.headline}</h2>
+            <p>{success.detail}</p>
+          </div>
         </div>
+        <div className="results-hero-stats">
+          <div className="results-hero-stat">
+            <div className="results-hero-stat-label">At retirement (age {targetRetirementAge})</div>
+            <div className="results-hero-stat-value">{formatCurrency(result.portfolioAtRetirement)}</div>
+          </div>
+          <div className="results-hero-stat">
+            <div className="results-hero-stat-label">Yearly spending</div>
+            <div className="results-hero-stat-value">{formatCurrency(summary.annualSpending)}</div>
+          </div>
+          <div className="results-hero-stat">
+            <div className="results-hero-stat-label">Left at age 90 (typical)</div>
+            <div className="results-hero-stat-value">{formatCurrency(summary.estateAt90)}</div>
+          </div>
+          <div className="results-hero-stat">
+            <div className="results-hero-stat-label">Social Security start</div>
+            <div className="results-hero-stat-value">Age {summary.claimAge}</div>
+          </div>
+        </div>
+      </div>
+
+      <h2 className="section-title">Key numbers</h2>
+      <p className="section-desc">A quick snapshot based on your inputs and assumptions.</p>
+      <div className="dashboard-cards">
+        <div className={`card ${success.label === "Strong" || success.label === "Good" ? "success" : success.label === "Fair" ? "warning" : "danger"}`}>
+          <div className="card-label">Plan may last until</div>
+          <div className="card-value">Age {summary.lifeExpectancy}</div>
+          <div className="card-subtext">{success.label} outlook ({formatPercent(summary.successRate)} simulations)</div>
+        </div>
+        <div className="card success">
+          <div className="card-label">Full Social Security age</div>
+          <div className="card-value">{summary.fullRetirementAgeLabel}</div>
+          <div className="card-subtext">Based on your birth year · you are {summary.yourAge} today</div>
+        </div>
+        <div className="card success">
+          <div className="card-label">Savings at retirement</div>
+          <div className="card-value">{formatCurrency(result.portfolioAtRetirement)}</div>
+          <div className="card-subtext">All accounts combined</div>
+        </div>
+      </div>
+
+      <CollapsibleSection title="Compare different retirement ages" hint="See how retiring earlier or later changes the picture">
+        <p className="section-desc">The highlighted row is your chosen retirement age.</p>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Retire at</th>
+                <th>Savings at retirement</th>
+                <th>Years to fund</th>
+                <th>Monthly from savings</th>
+                <th>Years before Medicare</th>
+                <th>Plan success</th>
+                <th>Left at 90</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.ageComparison.map((row) => (
+                <tr key={row.age} className={row.age === targetRetirementAge ? "highlighted" : ""}>
+                  <td>Age {row.age}</td>
+                  <td>{formatCurrency(row.portfolio)}</td>
+                  <td>{row.yearsNeeded}</td>
+                  <td>{formatCurrency(row.monthlyIncome)}</td>
+                  <td>{row.healthcareGap}</td>
+                  <td>{formatPercent(row.successRate)}</td>
+                  <td>{formatCurrency(row.estate)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection title="Social Security: when to start?" hint="Compare monthly checks at different ages">
+        <p className="section-desc">Your benefits at each claiming age. Highlighted row = your choice.</p>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Start at age</th>
+                <th>Monthly check</th>
+                <th>Yearly total</th>
+                <th>Total by 85</th>
+                <th>Total by 90</th>
+                <th>Break-even vs full age</th>
+                <th>vs waiting until 70</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.yourSsClaiming.map((row) => (
+                <tr key={row.claimAge} className={row.claimAge === summary.claimAge ? "highlighted" : ""}>
+                  <td>{row.claimAge}</td>
+                  <td>{formatCurrency(row.monthlyBenefit)}</td>
+                  <td>{formatCurrency(row.annualBenefit)}</td>
+                  <td>{formatCurrency(row.lifetimeTo85)}</td>
+                  <td>{formatCurrency(row.lifetimeTo90)}</td>
+                  <td>{row.breakeven}</td>
+                  <td>{row.vs70}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="breakeven-box">
+          Break-even is when total benefits from starting earlier catch up to starting later.
+        </div>
+
+        {maritalStatus === "Married" && result.spouseSsClaiming.length > 0 && (
+          <>
+            <p className="section-desc">Spouse&apos;s benefits at each claiming age</p>
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Start at age</th>
+                    <th>Monthly check</th>
+                    <th>Yearly total</th>
+                    <th>Total by 85</th>
+                    <th>Total by 90</th>
+                    <th>Break-even vs full age</th>
+                    <th>vs waiting until 70</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.spouseSsClaiming.map((row) => (
+                    <tr key={row.claimAge}>
+                      <td>{row.claimAge}</td>
+                      <td>{formatCurrency(row.monthlyBenefit)}</td>
+                      <td>{formatCurrency(row.annualBenefit)}</td>
+                      <td>{formatCurrency(row.lifetimeTo85)}</td>
+                      <td>{formatCurrency(row.lifetimeTo90)}</td>
+                      <td>{row.breakeven}</td>
+                      <td>{row.vs70}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </CollapsibleSection>
+
+      <CollapsibleSection title="Market uncertainty (1,000 scenarios)" hint="How your savings might grow or shrink">
+        <div className="chart-grid">
+          <div className="chart-box">
+            <ResponsiveContainer width="100%" height={240}>
+              <PieChart>
+                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={90}>
+                  {pieData.map((_, i) => (
+                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(v) => formatPercent(Number(v))} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+            <p className="text-center text-sm text-[#64748b]">
+              In {formatPercent(summary.successRate)} of scenarios, savings lasted through the plan
+            </p>
+          </div>
+          <div className="chart-box">
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart data={percentileData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="age" />
+                <YAxis unit="M" />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="p90" stroke="#059669" dot={false} name="Best 10%" />
+                <Line type="monotone" dataKey="p50" stroke="#2563eb" dot={false} name="Typical" strokeWidth={2} />
+                <Line type="monotone" dataKey="p10" stroke="#dc2626" dot={false} name="Worst 10%" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection title="Savings over time" hint="How each account type may change">
         <div className="chart-box">
-          <ResponsiveContainer width="100%" height={320}>
-            <LineChart data={percentileData}>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={portfolioData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="age" />
-              <YAxis />
+              <YAxis unit="M" />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="p90" stroke="#059669" dot={false} name="90th" />
-              <Line type="monotone" dataKey="p50" stroke="#2563eb" dot={false} name="Median" strokeWidth={2} />
-              <Line type="monotone" dataKey="p10" stroke="#dc2626" dot={false} name="10th" />
+              <Line type="monotone" dataKey="preTax" stroke="#2563eb" dot={false} name="401k / IRA" />
+              <Line type="monotone" dataKey="roth" stroke="#059669" dot={false} name="Roth" />
+              <Line type="monotone" dataKey="taxable" stroke="#f59e0b" dot={false} name="Brokerage" />
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </CollapsibleSection>
 
-      <h2 className="section-title">Portfolio Projection Over Time</h2>
-      <div className="chart-box mb-8">
-        <ResponsiveContainer width="100%" height={360}>
-          <LineChart data={portfolioData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="age" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="preTax" stroke="#2563eb" dot={false} name="Pre-Tax" />
-            <Line type="monotone" dataKey="roth" stroke="#059669" dot={false} name="Roth" />
-            <Line type="monotone" dataKey="taxable" stroke="#f59e0b" dot={false} name="Taxable" />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      <CollapsibleSection title="Taxes & Medicare surcharges" hint="Federal tax and higher Medicare costs (IRMAA)">
+        <div className="chart-box mb-4">
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={taxData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="age" />
+              <YAxis unit="k" />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="federal" stackId="a" fill="#2563eb" name="Federal tax ($k)" />
+              <Bar dataKey="medicare" stackId="a" fill="#f59e0b" name="Medicare surcharge ($k)" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="table-wrap">
+          <table className="data-table">
+            <tbody>
+              <tr><td><strong>Total federal tax (lifetime estimate)</strong></td><td>{formatCurrency(result.totalFederalTax)}</td></tr>
+              <tr><td><strong>Total state tax</strong></td><td>{formatCurrency(result.totalStateTax)}</td></tr>
+              <tr><td><strong>Medicare income surcharges (IRMAA)</strong></td><td>{formatCurrency(result.totalIrmaa)}</td></tr>
+              <tr><td><strong>Overall tax rate in retirement</strong></td><td>{formatPercent(result.effectiveTaxRate, 1)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </CollapsibleSection>
 
-      <h2 className="section-title">Tax Burden Analysis</h2>
-      <div className="chart-box mb-4">
-        <ResponsiveContainer width="100%" height={360}>
-          <BarChart data={taxData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="age" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="federal" stackId="a" fill="#2563eb" name="Federal Tax (k)" />
-            <Bar dataKey="irmaa" stackId="a" fill="#f59e0b" name="IRMAA (k)" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-      <div className="table-wrap mb-8">
-        <table className="data-table">
-          <tbody>
-            <tr><td><strong>Total Federal Tax (Lifetime)</strong></td><td>{formatCurrency(result.totalFederalTax)}</td></tr>
-            <tr><td><strong>Total State Tax</strong></td><td>{formatCurrency(result.totalStateTax)}</td></tr>
-            <tr><td><strong>Total IRMAA Surcharge</strong></td><td>{formatCurrency(result.totalIrmaa)}</td></tr>
-            <tr><td><strong>Effective Tax Rate in Retirement</strong></td><td>{formatPercent(result.effectiveTaxRate, 1)}</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <CollapsibleSection title="What if the market drops 30%?" hint="Stress test in year one of retirement">
+        <div className="chart-box">
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={stressData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="year" />
+              <YAxis unit="M" />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="base" stroke="#059669" dot={false} name="Normal market" strokeWidth={2} />
+              <Line type="monotone" dataKey="stress" stroke="#dc2626" dot={false} name="30% drop in year 1" strokeDasharray="5 5" strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </CollapsibleSection>
 
-      <h2 className="section-title">Stress Test: Market Downturn Scenario</h2>
-      <div className="chart-box mb-8">
-        <ResponsiveContainer width="100%" height={360}>
-          <LineChart data={stressData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="year" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="base" stroke="#059669" dot={false} name="Base Case (M)" strokeWidth={2} />
-            <Line type="monotone" dataKey="stress" stroke="#dc2626" dot={false} name="-30% Year 1 (M)" strokeDasharray="5 5" strokeWidth={2} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      <h2 className="section-title">Inflation Impact: Purchasing Power</h2>
-      <div className="table-wrap mb-8">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Age</th>
-              <th>Year</th>
-              <th>Purchasing Power</th>
-              <th>Real Decline %</th>
-            </tr>
-          </thead>
-          <tbody>
-            {result.inflationImpact.map((row) => (
-              <tr key={row.age}>
-                <td>{row.age}</td>
-                <td>{row.year}</td>
-                <td>{formatCurrency(row.purchasingPower)}</td>
-                <td>{formatPercent(row.decline, 1)}</td>
+      <CollapsibleSection title="Inflation: buying power over time" hint="How far your spending dollar may stretch">
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Age</th>
+                <th>Year</th>
+                <th>Buying power of $100k today</th>
+                <th>Decline</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {result.inflationImpact.map((row) => (
+                <tr key={row.age}>
+                  <td>{row.age}</td>
+                  <td>{row.year}</td>
+                  <td>{formatCurrency(row.purchasingPower)}</td>
+                  <td>{formatPercent(row.decline, 1)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CollapsibleSection>
 
+      <h2 className="section-title">Things to consider</h2>
       <div className="recommendations-grid">
         <div className="rec-box roth">
-          <strong>Roth Conversion Opportunity</strong>
-          <p>Consider converting to Roth IRA before RMD age (73) to reduce future tax burden.</p>
+          <strong>Roth conversions</strong>
+          <p>Moving money from a traditional IRA to Roth before required withdrawals (age 73) may lower future taxes.</p>
         </div>
         <div className="rec-box ss">
-          <strong>Social Security Strategy</strong>
-          <p>Claiming at {summary.claimAge} aligns with your portfolio projections. Each year of delay increases benefits by ~8%.</p>
+          <strong>Social Security timing</strong>
+          <p>Starting at age {summary.claimAge} fits your inputs. Each year you wait (up to 70) raises your monthly benefit by about 8%.</p>
         </div>
         <div className="rec-box healthcare">
-          <strong>Healthcare Planning</strong>
-          <p>Budget for healthcare costs pre-Medicare. Consider HSA as a tax-advantaged account.</p>
+          <strong>Healthcare before Medicare</strong>
+          <p>Plan for health costs if you retire before 65. A health savings account (HSA) can help with tax-free medical spending.</p>
         </div>
       </div>
 
       <div className="disclaimer">
-        <strong>Disclaimer:</strong> This calculator is for educational purposes only and does not constitute financial advice.
-        All projections are based on your assumptions and are subject to significant changes. Consult a licensed financial advisor
-        before making major financial decisions. See{" "}
-        <a href="https://www.ssa.gov/planners/retire/" target="_blank" rel="noopener noreferrer" className="underline">
+        <strong>Disclaimer:</strong> For educational purposes only — not financial advice.
+        Projections depend on your assumptions and can change significantly.
+        Talk to a licensed advisor before major decisions. Official Social Security info:{" "}
+        <a href="https://www.ssa.gov/planners/retire/" target="_blank" rel="noopener noreferrer">
           SSA.gov
-        </a>{" "}
-        for official Social Security information.
+        </a>
+        .
       </div>
     </div>
   );

@@ -38,43 +38,43 @@ export function validateStep(step: number, form: FormState): StepErrors {
     const age = form.birthDate ? calculateAgeFromBirthDate(form.birthDate) : num(form.yourAge);
     const targetAge = num(form.targetRetirementAge);
     if (Number.isNaN(targetAge)) {
-      errors.targetRetirementAge = "Enter target retirement age.";
+      errors.targetRetirementAge = "Choose when you plan to retire.";
     } else if (targetAge < 50 || targetAge > 85) {
-      errors.targetRetirementAge = "Target retirement age must be 50–85.";
+      errors.targetRetirementAge = "Retirement age must be 50–85.";
     } else if (typeof age === "number" && !Number.isNaN(age) && targetAge < age) {
       errors.targetRetirementAge = "Cannot retire before your current age.";
     }
 
     const life = num(form.lifeExpectancy);
     if (Number.isNaN(life) || life < 65 || life > 110) {
-      errors.lifeExpectancy = "Life expectancy must be 65–110.";
+      errors.lifeExpectancy = "Choose how long to plan for.";
     } else if (!Number.isNaN(targetAge) && life <= targetAge) {
       errors.lifeExpectancy = "Must be greater than retirement age.";
     }
   }
 
-  if (step === 3) {
+  if (step === 2) {
     const spending = num(form.retirementSpending);
     const travel = num(form.travelBudget) || 0;
     if (Number.isNaN(spending) || spending + travel <= 0) {
-      errors.retirementSpending = "Enter estimated annual retirement spending.";
+      errors.retirementSpending = "Choose your expected yearly spending in retirement.";
     }
   }
 
-  if (step === 4) {
+  if (step === 3) {
     const claim = num(form.yourClaimAge);
     if (Number.isNaN(claim) || claim < 62 || claim > 70) {
-      errors.yourClaimAge = "Claiming age must be 62–70.";
+      errors.yourClaimAge = "Choose when you'll start Social Security (62–70).";
     }
     if (form.maritalStatus === "Married") {
       const spouseClaim = num(form.spouseClaimAge);
       if (Number.isNaN(spouseClaim) || spouseClaim < 62 || spouseClaim > 70) {
-        errors.spouseClaimAge = "Spouse claiming age must be 62–70.";
+        errors.spouseClaimAge = "Choose when your spouse will start (62–70).";
       }
     }
   }
 
-  if (step === 5) {
+  if (step === 4) {
     const pre = num(form.expectedReturnPre);
     const post = num(form.expectedReturnPost);
     if (Number.isNaN(pre) || pre < -10 || pre > 20) {
