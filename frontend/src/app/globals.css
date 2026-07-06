@@ -87,13 +87,6 @@ body {
   margin-top: 2px;
 }
 
-.app-header-subtitle {
-  margin: 10px 0 0;
-  font-size: 0.95rem;
-  opacity: 0.92;
-  line-height: 1.45;
-}
-
 /* Wizard progress */
 .wizard-progress {
   background: var(--color-bg);
