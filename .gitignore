@@ -88,8 +88,10 @@ Thumbs.db
 Desktop.ini
 ehthumbs.db
 
-# --- Cursor / local agent artifacts ---
-.cursor/
+# --- Cursor — ignore local IDE state; keep shared rules in repo ---
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
 *.local-agent*
 
 # --- App-generated exports (may contain personal financial data) ---
