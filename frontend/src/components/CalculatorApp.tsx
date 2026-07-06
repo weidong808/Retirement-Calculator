@@ -3,8 +3,29 @@
 import { useMemo, useState } from "react";
 import { WizardProgress } from "@/components/WizardProgress";
 import { ResultsSection } from "@/components/ResultsSection";
+import { RangeSelect } from "@/components/RangeSelect";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
+import { AppHeader } from "@/components/AppHeader";
+import { AppFooter } from "@/components/AppFooter";
 import { ApiError, calculatePlan } from "@/lib/api";
 import { calculateAgeFromBirthDate, getFraFromBirthDate } from "@/lib/fra";
+import { getStateTaxRate } from "@/lib/stateTaxRates";
+import { usStates } from "@/lib/states";
+import {
+  balanceRanges,
+  claimAgeOptions,
+  contributionRanges,
+  incomeRanges,
+  inflationPresets,
+  lifeExpectancyOptions,
+  pensionRanges,
+  returnPresets,
+  retirementAgeOptions,
+  spendingRanges,
+  ssBenefitRanges,
+  stateTaxPresets,
+  travelRanges,
+} from "@/lib/ranges";
 import { hasErrors, validateStep, type StepErrors } from "@/lib/validation";
 import {
   defaultFormState,
@@ -13,25 +34,23 @@ import {
   type RetirementPlanResult,
 } from "@/types/retirement";
 
+const TOTAL_STEPS = 4;
+
 function Field({
   label,
   children,
-  tooltip,
+  hint,
   error,
 }: {
   label: string;
   children: React.ReactNode;
-  tooltip?: string;
+  hint?: string;
   error?: string;
 }) {
   return (
     <div className="form-group">
-      <label className="flex items-center gap-2">
-        {label}
-        {tooltip && (
-          <span className="tooltip-icon" title={tooltip}>?</span>
-        )}
-      </label>
+      <label>{label}</label>
+      {hint && <p className="field-label-hint">{hint}</p>}
       {children}
       {error && <span className="field-error">{error}</span>}
     </div>
@@ -46,6 +65,24 @@ function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return <select className="form-input" {...props} />;
 }
 
+function StepIntro({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div className="step-intro">
+      <h2 className="step-title">{title}</h2>
+      <p className="step-subtitle">{subtitle}</p>
+    </div>
+  );
+}
+
+function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="form-section">
+      <h3 className="form-section-title">{title}</h3>
+      <div className="form-grid">{children}</div>
+    </section>
+  );
+}
+
 export function CalculatorApp() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormState>(defaultFormState);
@@ -53,6 +90,7 @@ export function CalculatorApp() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stepErrors, setStepErrors] = useState<StepErrors>({});
+  const [returnPreset, setReturnPreset] = useState("moderate");
 
   const isMarried = form.maritalStatus === "Married";
   const computedAge = useMemo(
@@ -73,6 +111,48 @@ export function CalculatorApp() {
     });
   };
 
+  const updateState = (stateName: string) => {
+    setForm((prev) => ({
+      ...prev,
+      state: stateName,
+      stateIncomeTax: stateName ? getStateTaxRate(stateName) : prev.stateIncomeTax,
+    }));
+    setStepErrors((prev) => {
+      const next = { ...prev };
+      delete next.state;
+      return next;
+    });
+  };
+
+  const handleEditAnswers = () => {
+    setStep(1);
+    setStepErrors({});
+    setError(null);
+    window.scrollTo(0, 0);
+  };
+
+  const handleStartOver = () => {
+    setForm(defaultFormState);
+    setResult(null);
+    setStep(1);
+    setStepErrors({});
+    setError(null);
+    setReturnPreset("moderate");
+    window.scrollTo(0, 0);
+  };
+
+  const applyReturnPreset = (presetId: string) => {
+    setReturnPreset(presetId);
+    const preset = returnPresets.find((p) => p.id === presetId);
+    if (preset && presetId !== "custom") {
+      setForm((prev) => ({
+        ...prev,
+        expectedReturnPre: preset.pre,
+        expectedReturnPost: preset.post,
+      }));
+    }
+  };
+
   const runStepValidation = (currentStep: number) => {
     const errors = validateStep(currentStep, form);
     setStepErrors(errors);
@@ -82,18 +162,18 @@ export function CalculatorApp() {
   const handleNext = () => {
     if (!runStepValidation(step)) return;
     setError(null);
-    setStep((s) => Math.min(5, s + 1));
+    setStep((s) => Math.min(TOTAL_STEPS, s + 1));
     setStepErrors({});
     window.scrollTo(0, 0);
   };
 
   const handleCalculate = async () => {
-    for (let s = 1; s <= 5; s++) {
+    for (let s = 1; s <= TOTAL_STEPS; s++) {
       const errors = validateStep(s, form);
       if (hasErrors(errors)) {
         setStep(s);
         setStepErrors(errors);
-        setError("Fix the highlighted fields before calculating.");
+        setError("Please fix the highlighted fields before calculating.");
         return;
       }
     }
@@ -120,57 +200,76 @@ export function CalculatorApp() {
 
   return (
     <div className="calculator-shell">
-      <header className="app-header">
-        <h1>Retirement Calculator Pro</h1>
-        <p>Comprehensive Plan for Your Retirement Future</p>
-      </header>
+      <AppHeader />
 
       <div className="disclaimer disclaimer-top">
-        <strong>Estimates only.</strong> Not financial advice. Results use your assumptions and simplified US tax/SS rules.
+        <strong>Estimates only.</strong> Not financial advice. Simplified US tax and Social Security rules.
       </div>
 
       <WizardProgress currentStep={step} />
 
       <div className="form-container">
+        {loading && (
+          <div className="loading-overlay" aria-live="polite">
+            <div className="loading-spinner" />
+            <p>Running your retirement projection…</p>
+          </div>
+        )}
         {step === 1 && (
           <div className="wizard-step">
-            <h2 className="step-title">Step 1: Personal Profile</h2>
+            <StepIntro
+              title="About you"
+              subtitle="Basic details so we can estimate your timeline."
+            />
             <div className="form-grid">
-              <Field label="First Name (Optional)">
-                <Input value={form.firstName} onChange={(e) => update("firstName", e.target.value)} placeholder="Enter your first name" />
-              </Field>
-              <Field label="Birth Date" error={stepErrors.birthDate}>
+              <Field label="When were you born?" error={stepErrors.birthDate}>
                 <Input type="date" value={form.birthDate} onChange={(e) => update("birthDate", e.target.value)} />
                 {computedAge !== null && (
-                  <span className="field-hint">Current age: {computedAge}</span>
+                  <span className="field-hint">You are about {computedAge} years old today</span>
                 )}
               </Field>
-            </div>
-            <div className="form-grid">
-              <Field label="Marital Status" error={stepErrors.maritalStatus}>
+              <Field label="Marital status" error={stepErrors.maritalStatus}>
                 <Select value={form.maritalStatus} onChange={(e) => update("maritalStatus", e.target.value)}>
-                  <option value="">-- Select --</option>
+                  <option value="">Choose…</option>
                   <option value="Single">Single</option>
                   <option value="Married">Married</option>
                 </Select>
               </Field>
-              {isMarried && (
-                <Field label="Spouse Age" error={stepErrors.spouseAge}>
-                  <Input type="number" min={18} max={100} value={form.spouseAge} onChange={(e) => update("spouseAge", e.target.value)} placeholder="e.g., 44" />
-                </Field>
-              )}
             </div>
             <div className="form-grid">
-              <Field label="State of Residence">
-                <Input value={form.state} onChange={(e) => update("state", e.target.value)} placeholder="e.g., California" />
+              {isMarried && (
+                <Field label="Spouse's age" error={stepErrors.spouseAge}>
+                  <Input type="number" min={18} max={100} value={form.spouseAge} onChange={(e) => update("spouseAge", e.target.value)} placeholder="e.g. 58" />
+                </Field>
+              )}
+              <Field label="When do you plan to retire?" error={stepErrors.targetRetirementAge}>
+                <Select value={form.targetRetirementAge} onChange={(e) => update("targetRetirementAge", e.target.value)}>
+                  <option value="">Choose an age…</option>
+                  {retirementAgeOptions.map((age) => (
+                    <option key={age} value={age}>Age {age}</option>
+                  ))}
+                </Select>
               </Field>
-              <Field label="Target Retirement Age" error={stepErrors.targetRetirementAge}>
-                <Input type="number" min={50} max={85} value={form.targetRetirementAge} onChange={(e) => update("targetRetirementAge", e.target.value)} placeholder="e.g., 65" />
+              <Field
+                label="How long should we plan for?"
+                hint="A rough guess is fine — many people use age 90."
+                error={stepErrors.lifeExpectancy}
+              >
+                <Select value={form.lifeExpectancy} onChange={(e) => update("lifeExpectancy", e.target.value)}>
+                  {lifeExpectancyOptions.map((age) => (
+                    <option key={age} value={age}>Plan through age {age}</option>
+                  ))}
+                </Select>
               </Field>
             </div>
             <div className="form-grid single">
-              <Field label="Life Expectancy" error={stepErrors.lifeExpectancy}>
-                <Input type="number" min={65} max={110} value={form.lifeExpectancy} onChange={(e) => update("lifeExpectancy", e.target.value)} placeholder="e.g., 90" />
+              <Field label="State you live in (optional)" hint="We’ll estimate your state tax rate automatically.">
+                <Select value={form.state} onChange={(e) => updateState(e.target.value)}>
+                  <option value="">Choose a state…</option>
+                  {usStates.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </Select>
               </Field>
             </div>
           </div>
@@ -178,136 +277,185 @@ export function CalculatorApp() {
 
         {step === 2 && (
           <div className="wizard-step">
-            <h2 className="step-title">Step 2: Account Balances</h2>
-            <div className="form-grid">
-              <Field label="Traditional 401k/IRA Balance">
-                <Input type="number" min={0} step={1000} value={form.traditional401k} onChange={(e) => update("traditional401k", e.target.value)} placeholder="e.g., 500000" />
+            <StepIntro
+              title="Your money"
+              subtitle="Pick the range closest to your situation — exact numbers aren't required."
+            />
+
+            <FormSection title="Savings & investments">
+              <Field
+                label="Work retirement accounts (401k, traditional IRA)"
+                hint="Money you've saved pre-tax in employer or IRA accounts."
+              >
+                <RangeSelect ranges={balanceRanges} value={form.traditional401k} onChange={(v) => update("traditional401k", v)} />
               </Field>
-              <Field label="Roth 401k/IRA Balance">
-                <Input type="number" min={0} step={1000} value={form.roth401k} onChange={(e) => update("roth401k", e.target.value)} placeholder="e.g., 100000" />
+              <Field
+                label="Roth accounts (Roth 401k or Roth IRA)"
+                hint="Already-taxed savings that can be withdrawn tax-free in retirement."
+              >
+                <RangeSelect ranges={balanceRanges} value={form.roth401k} onChange={(v) => update("roth401k", v)} />
               </Field>
-            </div>
-            <div className="form-grid">
-              <Field label="Taxable Brokerage Balance">
-                <Input type="number" min={0} step={1000} value={form.taxableBrokerage} onChange={(e) => update("taxableBrokerage", e.target.value)} placeholder="e.g., 200000" />
+              <Field label="Regular investment account" hint="Taxable brokerage or mutual fund accounts.">
+                <RangeSelect ranges={balanceRanges} value={form.taxableBrokerage} onChange={(v) => update("taxableBrokerage", v)} />
               </Field>
-              <Field label="HSA Balance">
-                <Input type="number" min={0} step={1000} value={form.hsa} onChange={(e) => update("hsa", e.target.value)} placeholder="e.g., 50000" />
+              <Field label="Health savings account (HSA)" hint="Skip if you don't have one.">
+                <RangeSelect ranges={balanceRanges} value={form.hsa} onChange={(v) => update("hsa", v)} />
               </Field>
-            </div>
-            <div className="form-grid">
-              <Field label="Annual 401k Pre-tax Contribution">
-                <Input type="number" min={0} step={100} value={form.annualPreTax401k} onChange={(e) => update("annualPreTax401k", e.target.value)} placeholder="e.g., 23500" />
+            </FormSection>
+
+            <FormSection title="How much you save each year">
+              <Field label="Into 401k (before taxes)">
+                <RangeSelect ranges={contributionRanges} value={form.annualPreTax401k} onChange={(v) => update("annualPreTax401k", v)} customStep={100} />
               </Field>
-              <Field label="Annual Roth Contribution">
-                <Input type="number" min={0} step={100} value={form.annualRothContribution} onChange={(e) => update("annualRothContribution", e.target.value)} placeholder="e.g., 7000" />
+              <Field label="Into Roth IRA or Roth 401k">
+                <RangeSelect ranges={contributionRanges} value={form.annualRothContribution} onChange={(v) => update("annualRothContribution", v)} customStep={100} />
               </Field>
-            </div>
+            </FormSection>
+
+            <FormSection title="Income & spending">
+              <Field label="Household income today (before taxes)">
+                <RangeSelect ranges={incomeRanges} value={form.householdIncome} onChange={(v) => update("householdIncome", v)} />
+              </Field>
+              {isMarried && (
+                <Field label="Spouse's income (before taxes)">
+                  <RangeSelect ranges={incomeRanges} value={form.spouseIncome} onChange={(v) => update("spouseIncome", v)} />
+                </Field>
+              )}
+              <Field
+                label="Yearly spending in retirement"
+                hint="Everyday living costs — housing, food, healthcare, etc."
+                error={stepErrors.retirementSpending}
+              >
+                <RangeSelect ranges={spendingRanges} value={form.retirementSpending} onChange={(v) => update("retirementSpending", v)} />
+              </Field>
+              <Field label="Extra for travel & fun each year">
+                <RangeSelect ranges={travelRanges} value={form.travelBudget} onChange={(v) => update("travelBudget", v)} />
+              </Field>
+              <Field label="Pension income (if any)">
+                <RangeSelect ranges={pensionRanges} value={form.pensionIncome} onChange={(v) => update("pensionIncome", v)} />
+              </Field>
+            </FormSection>
           </div>
         )}
 
         {step === 3 && (
           <div className="wizard-step">
-            <h2 className="step-title">Step 3: Income &amp; Spending</h2>
+            <StepIntro
+              title="Social Security"
+              subtitle="Check your estimate at ssa.gov — pick a range here if you're not sure."
+            />
+
+            {fraInfo && (
+              <div className="info-banner">
+                Your full retirement age (per SSA rules): <strong>{fraInfo.label}</strong>
+              </div>
+            )}
+
             <div className="form-grid">
-              <Field label="Current Household Income">
-                <Input type="number" min={0} step={1000} value={form.householdIncome} onChange={(e) => update("householdIncome", e.target.value)} placeholder="e.g., 150000" />
+              <Field
+                label="Your expected monthly Social Security"
+                hint="At full retirement age — from your SSA statement or ssa.gov."
+              >
+                <RangeSelect ranges={ssBenefitRanges} value={form.yourMonthlySsFra} onChange={(v) => update("yourMonthlySsFra", v)} customStep={100} />
               </Field>
               {isMarried && (
-                <Field label="Spouse Income">
-                  <Input type="number" min={0} step={1000} value={form.spouseIncome} onChange={(e) => update("spouseIncome", e.target.value)} placeholder="e.g., 80000" />
+                <Field label="Spouse's expected monthly Social Security">
+                  <RangeSelect ranges={ssBenefitRanges} value={form.spouseMonthlySsFra} onChange={(v) => update("spouseMonthlySsFra", v)} customStep={100} />
                 </Field>
               )}
             </div>
             <div className="form-grid">
-              <Field label="Estimated Annual Retirement Spending" error={stepErrors.retirementSpending}>
-                <Input type="number" min={0} step={1000} value={form.retirementSpending} onChange={(e) => update("retirementSpending", e.target.value)} placeholder="e.g., 100000" />
+              <Field label="When will you start taking Social Security?" error={stepErrors.yourClaimAge}>
+                <Select value={form.yourClaimAge} onChange={(e) => update("yourClaimAge", e.target.value)}>
+                  {claimAgeOptions.map(({ age, label }) => (
+                    <option key={age} value={age}>{label}</option>
+                  ))}
+                </Select>
               </Field>
-              <Field label="Travel &amp; Discretionary Budget">
-                <Input type="number" min={0} step={1000} value={form.travelBudget} onChange={(e) => update("travelBudget", e.target.value)} placeholder="e.g., 20000" />
-              </Field>
+              {isMarried && (
+                <Field label="When will your spouse start?" error={stepErrors.spouseClaimAge}>
+                  <Select value={form.spouseClaimAge} onChange={(e) => update("spouseClaimAge", e.target.value)}>
+                    {claimAgeOptions.map(({ age, label }) => (
+                      <option key={age} value={age}>{label}</option>
+                    ))}
+                  </Select>
+                </Field>
+              )}
             </div>
-            <div className="form-grid single">
-              <Field label="Pension Income (if any)">
-                <Input type="number" min={0} step={1000} value={form.pensionIncome} onChange={(e) => update("pensionIncome", e.target.value)} placeholder="e.g., 30000" />
+
+            <CollapsibleSection title="Advanced: Roth conversions before retirement" hint="Optional — moving money from traditional to Roth accounts">
+              <Field label="Amount to convert each year (before you retire)">
+                <RangeSelect ranges={contributionRanges} value={form.annualRothConversionPre} onChange={(v) => update("annualRothConversionPre", v)} />
               </Field>
-            </div>
+            </CollapsibleSection>
           </div>
         )}
 
         {step === 4 && (
           <div className="wizard-step">
-            <h2 className="step-title">Step 4: Social Security</h2>
-            <div className="form-grid">
-              <Field label="Your Estimated Monthly Benefit at FRA" tooltip="Full Retirement Age benefit amount">
-                <Input type="number" min={0} step={100} value={form.yourMonthlySsFra} onChange={(e) => update("yourMonthlySsFra", e.target.value)} placeholder="e.g., 3000" />
-              </Field>
-              {isMarried && (
-                <Field label="Spouse Estimated Monthly Benefit at FRA">
-                  <Input type="number" min={0} step={100} value={form.spouseMonthlySsFra} onChange={(e) => update("spouseMonthlySsFra", e.target.value)} placeholder="e.g., 2500" />
-                </Field>
-              )}
-            </div>
-            <div className="form-grid">
-              <Field label="Your Planned Claiming Age" error={stepErrors.yourClaimAge}>
-                <Input type="number" min={62} max={70} value={form.yourClaimAge} onChange={(e) => update("yourClaimAge", e.target.value)} placeholder="e.g., 67" />
-              </Field>
-              {isMarried && (
-                <Field label="Spouse Planned Claiming Age" error={stepErrors.spouseClaimAge}>
-                  <Input type="number" min={62} max={70} value={form.spouseClaimAge} onChange={(e) => update("spouseClaimAge", e.target.value)} placeholder="e.g., 67" />
-                </Field>
-              )}
-            </div>
-            <div className="form-grid">
-              <Field label="Your Full Retirement Age (FRA)" tooltip="Derived from birth date per SSA rules">
-                <Input
-                  readOnly
-                  value={fraInfo?.label ?? "Enter birth date in Step 1"}
-                  className="form-input form-input-readonly"
-                />
-              </Field>
-              <Field label="Annual Roth Conversion Amount (Pre-Retirement)">
-                <Input type="number" min={0} step={1000} value={form.annualRothConversionPre} onChange={(e) => update("annualRothConversionPre", e.target.value)} placeholder="e.g., 50000" />
-              </Field>
-            </div>
-          </div>
-        )}
+            <StepIntro
+              title="Assumptions"
+              subtitle="We've picked sensible defaults — adjust only if you want to explore different scenarios."
+            />
 
-        {step === 5 && (
-          <div className="wizard-step">
-            <h2 className="step-title">Step 5: Market &amp; Tax Settings</h2>
+            <Field label="How might your investments grow?">
+              <Select value={returnPreset} onChange={(e) => applyReturnPreset(e.target.value)}>
+                {returnPresets.map((p) => (
+                  <option key={p.id} value={p.id}>{p.label}</option>
+                ))}
+              </Select>
+            </Field>
+
+            {returnPreset === "custom" && (
+              <div className="form-grid">
+                <Field label="Growth rate while working (% per year)" error={stepErrors.expectedReturnPre}>
+                  <Input type="number" min={-10} max={20} step={0.5} value={form.expectedReturnPre} onChange={(e) => update("expectedReturnPre", e.target.value)} />
+                </Field>
+                <Field label="Growth rate in retirement (% per year)" error={stepErrors.expectedReturnPost}>
+                  <Input type="number" min={-10} max={20} step={0.5} value={form.expectedReturnPost} onChange={(e) => update("expectedReturnPost", e.target.value)} />
+                </Field>
+              </div>
+            )}
+
             <div className="form-grid">
-              <Field label="Expected Annual Return (Pre-Retirement)" error={stepErrors.expectedReturnPre}>
-                <Input type="number" min={-10} max={20} step={0.5} value={form.expectedReturnPre} onChange={(e) => update("expectedReturnPre", e.target.value)} />
+              <Field label="Expected inflation">
+                <Select value={form.inflationRate} onChange={(e) => update("inflationRate", e.target.value)}>
+                  {inflationPresets.map((p) => (
+                    <option key={p.value} value={p.value}>{p.label}</option>
+                  ))}
+                </Select>
               </Field>
-              <Field label="Expected Annual Return (Post-Retirement)" error={stepErrors.expectedReturnPost}>
-                <Input type="number" min={-10} max={20} step={0.5} value={form.expectedReturnPost} onChange={(e) => update("expectedReturnPost", e.target.value)} />
-              </Field>
-            </div>
-            <div className="form-grid">
-              <Field label="Inflation Rate (%)">
-                <Input type="number" min={0} max={10} step={0.1} value={form.inflationRate} onChange={(e) => update("inflationRate", e.target.value)} />
-              </Field>
-              <Field label="Social Security COLA Rate (%)">
-                <Input type="number" min={0} max={10} step={0.1} value={form.ssCola} onChange={(e) => update("ssCola", e.target.value)} />
-              </Field>
-            </div>
-            <div className="form-grid">
-              <Field label="State Income Tax Rate (%)">
-                <Input type="number" min={0} max={15} step={0.1} value={form.stateIncomeTax} onChange={(e) => update("stateIncomeTax", e.target.value)} />
-              </Field>
-              <Field label="Tax Law Scenario">
-                <Select value={form.taxLaw} onChange={(e) => update("taxLaw", e.target.value)}>
-                  <option value="TCJA">TCJA Extended (Current)</option>
-                  <option value="PreTCJA">Pre-TCJA Rates</option>
+              <Field label="State income tax (rough estimate)" hint={form.state ? `Suggested for ${form.state} — adjust if needed.` : undefined}>
+                <Select value={form.stateIncomeTax} onChange={(e) => update("stateIncomeTax", e.target.value)}>
+                  {stateTaxPresets.map((p) => (
+                    <option key={p.value} value={p.value}>{p.label}</option>
+                  ))}
                 </Select>
               </Field>
             </div>
-            <div className="form-grid single">
-              <Field label="Annual Roth Conversion Amount (Post-Retirement)">
-                <Input type="number" min={0} step={1000} value={form.annualRothConversionPost} onChange={(e) => update("annualRothConversionPost", e.target.value)} placeholder="e.g., 30000" />
-              </Field>
-            </div>
+
+            <CollapsibleSection title="Advanced settings" hint="Tax rules, Social Security raises, Roth conversions">
+              <div className="form-grid">
+                <Field label="Federal tax rules">
+                  <Select value={form.taxLaw} onChange={(e) => update("taxLaw", e.target.value)}>
+                    <option value="TCJA">Current rules (2018 and later)</option>
+                    <option value="PreTCJA">Older, higher tax rates (pre-2018)</option>
+                  </Select>
+                </Field>
+                <Field label="Social Security annual increase (COLA)">
+                  <Select value={form.ssCola} onChange={(e) => update("ssCola", e.target.value)}>
+                    {inflationPresets.map((p) => (
+                      <option key={`cola-${p.value}`} value={p.value}>{p.label}</option>
+                    ))}
+                  </Select>
+                </Field>
+              </div>
+              <div className="form-grid single">
+                <Field label="Roth conversion each year in retirement">
+                  <RangeSelect ranges={contributionRanges} value={form.annualRothConversionPost} onChange={(v) => update("annualRothConversionPost", v)} />
+                </Field>
+              </div>
+            </CollapsibleSection>
           </div>
         )}
 
@@ -321,13 +469,13 @@ export function CalculatorApp() {
               Back
             </button>
           )}
-          {step < 5 ? (
+          {step < TOTAL_STEPS ? (
             <button type="button" className="btn-primary" onClick={handleNext}>
-              Next
+              Continue
             </button>
           ) : (
             <button type="button" className="btn-success" onClick={handleCalculate} disabled={loading}>
-              {loading ? "Calculating…" : "Calculate My Plan"}
+              {loading ? "Calculating…" : "See My Results"}
             </button>
           )}
         </div>
@@ -339,9 +487,13 @@ export function CalculatorApp() {
             result={result}
             targetRetirementAge={result.summary.targetRetirementAge}
             maritalStatus={form.maritalStatus || "Single"}
+            onEditAnswers={handleEditAnswers}
+            onStartOver={handleStartOver}
           />
         </div>
       )}
+
+      <AppFooter />
     </div>
   );
 }

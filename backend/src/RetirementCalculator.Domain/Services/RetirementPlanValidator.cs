@@ -76,7 +76,7 @@ public static class RetirementPlanValidator
 
         if (input.RetirementSpending + input.TravelBudget <= 0)
         {
-            errors.Add("Enter estimated retirement spending (Step 3).");
+            errors.Add("Choose your expected yearly spending in retirement.");
         }
 
         if (input.ExpectedReturnPre is < -10 or > 20)
