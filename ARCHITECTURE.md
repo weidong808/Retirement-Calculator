@@ -1,7 +1,7 @@
 # Retirement Calculator Pro — Architecture
 
 **Stack:** Next.js + React (UI) · ASP.NET Core (API) · C# Domain (logic)  
-**Reference:** `Retirement Calculator Pro.html` (design + calculation logic)
+**Agent guide:** `AGENTS.md` · **Cursor rules:** `.cursor/rules/`
 
 ---
 
@@ -71,9 +71,7 @@ Retirement Calculator/
 │   │       ├── Models/                # Input / Result records
 │   │       └── Services/              # Pure calculation logic
 │   └── tests/
-│       └── RetirementCalculator.Domain.Tests/
-│
-└── Retirement Calculator Pro.html     # Original prototype reference
+│       └── RetirementCalculator.Api.Tests/
 ```
 
 **Rule:** All math lives in `RetirementCalculator.Domain`. React components call the API; controllers delegate to the engine.
@@ -152,10 +150,14 @@ Tests cover SS benefit logic and full engine integration.
 
 ## 9. Backlog
 
+### Done
+- [x] Wizard step validation (client + server)
+- [x] FRA auto-derived from birth date
+- [x] API integration tests + GitHub Actions CI
+- [x] Secret-safe gitignore + `.env.example`
+
 ### Must (next)
-- [ ] Input validation on wizard steps (block Next with clear errors)
-- [ ] FRA auto-derived from birth date (replace manual dropdown)
-- [ ] Excel export (port from HTML SheetJS)
+- [ ] Excel export
 
 ### Should
 - [ ] Docker Compose for API + frontend

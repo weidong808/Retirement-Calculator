@@ -2,8 +2,6 @@
 
 Full-stack retirement planning calculator — Next.js frontend + .NET Core backend.
 
-Reference design and logic: `Retirement Calculator Pro.html`
-
 ## Stack
 
 | Layer | Technology |
@@ -28,9 +26,13 @@ Retirement Calculator/
 │   │   ├── RetirementCalculator.Api/       # REST API
 │   │   └── RetirementCalculator.Domain/    # Pure calculation logic
 │   └── tests/
-│       └── RetirementCalculator.Domain.Tests/
-└── Retirement Calculator Pro.html            # Original prototype reference
+│       ├── RetirementCalculator.Domain.Tests/
+│       └── RetirementCalculator.Api.Tests/
+├── AGENTS.md
+└── .cursor/rules/
 ```
+
+Agent onboarding: see `AGENTS.md` and `.cursor/rules/`.
 
 ## Run locally
 
