@@ -1,0 +1,23 @@
+---
+description: C# domain layer — all retirement math and validation
+globs: backend/**/*.cs
+alwaysApply: false
+---
+
+# Domain & API logic
+
+All calculation and validation logic belongs in `RetirementCalculator.Domain`:
+
+- `Services/` — pure calculators (`SocialSecurityCalculator`, `FraCalculator`, `TaxCalculator`, `RmdCalculator`, `IrmaaCalculator`, `MonteCarloSimulator`, `RetirementCalculatorEngine`)
+- `Models/` — `RetirementPlanInput`, `RetirementPlanResult`
+- `RetirementPlanValidator` — input validation (returns error list)
+- `RetirementInputNormalizer` — derive age/FRA from `BirthDate` before calculate
+
+**API controllers** only validate, call `IRetirementCalculatorEngine`, return JSON. No formulas in controllers.
+
+**When changing math:**
+1. Update the relevant service (not the engine UI path unless orchestration changes).
+2. Add or update xUnit tests in `backend/tests/`.
+3. Keep SSA FRA rules in `FraCalculator` (birth year table); use month-level SS adjustments in `SocialSecurityCalculator`.
+
+JSON uses camelCase; enums serialize as strings.
