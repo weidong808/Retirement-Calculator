@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
+import { APP_NAME } from "@/lib/brand";
 import { DeveloperSection } from "@/components/DeveloperSection";
 
 const FEATURES = [
@@ -69,21 +69,13 @@ const WHY_ITEMS = [
 export function AboutPageContent() {
   return (
     <>
-      <section className="about-hero">
-        <div className="about-hero-inner">
-          <span className="about-hero-badge">Free · Private · US-focused</span>
-          <h1 className="about-hero-title">Check your retirement before you commit</h1>
-          <p className="about-hero-lead">
-            {APP_NAME} stress-tests your savings, income, and Social Security across thousands
-            of scenarios — so you can answer one question: {APP_TAGLINE}
-          </p>
+      <main className="about-main">
+        <div className="about-cta-bar">
           <Link href="/" className="about-cta-primary">
             Run your {APP_NAME} →
           </Link>
         </div>
-      </section>
 
-      <main className="about-main">
         <section className="about-section">
           <div className="about-section-header">
             <h2>What {APP_NAME} does</h2>

@@ -1,13 +1,26 @@
+import { AboutPageContent } from "@/components/AboutPageContent";
 import { AppFooter } from "@/components/AppFooter";
 import { AppHeader } from "@/components/AppHeader";
-import { AboutPageContent } from "@/components/AboutPageContent";
+import { Container } from "@/components/Container";
+import { PageHero } from "@/components/PageHero";
 
 export default function AboutPage() {
   return (
-    <div className="calculator-shell">
-      <AppHeader compact />
-      <AboutPageContent />
+    <>
+      <AppHeader />
+      <main className="page-wrap">
+        <PageHero
+          eyebrow="About RetireCheck"
+          title="How this calculator works"
+          subtitle="Transparent estimates, clear disclaimers, and math you can trust in a tested domain layer."
+        />
+        <Container className="page-content">
+          <div className="calculator-shell">
+            <AboutPageContent />
+          </div>
+        </Container>
+      </main>
       <AppFooter />
-    </div>
+    </>
   );
 }

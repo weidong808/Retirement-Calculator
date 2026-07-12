@@ -5,8 +5,10 @@ import { WizardProgress } from "@/components/WizardProgress";
 import { ResultsSection } from "@/components/ResultsSection";
 import { RangeSelect } from "@/components/RangeSelect";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
-import { AppHeader } from "@/components/AppHeader";
 import { AppFooter } from "@/components/AppFooter";
+import { AppHeader } from "@/components/AppHeader";
+import { Container } from "@/components/Container";
+import { PageHero } from "@/components/PageHero";
 import { ApiError, calculatePlan } from "@/lib/api";
 import { calculateAgeFromBirthDate, getFraFromBirthDate } from "@/lib/fra";
 import { getStateTaxRate } from "@/lib/stateTaxRates";
@@ -239,14 +241,13 @@ export function CalculatorApp() {
   };
 
   return (
-    <div className="calculator-shell">
+    <>
       <AppHeader />
-
-      <div className="disclaimer disclaimer-top">
-        <strong>Estimates only.</strong> Not financial advice. Simplified US tax and Social Security rules.
-      </div>
-
-      <WizardProgress currentStep={step} />
+      <main className="page-wrap">
+        <PageHero />
+        <Container className="page-content">
+          <div className="calculator-shell">
+            <WizardProgress currentStep={step} />
 
       <div className="form-container">
         {loading && (
@@ -542,7 +543,10 @@ export function CalculatorApp() {
         </div>
       )}
 
+          </div>
+        </Container>
+      </main>
       <AppFooter />
-    </div>
+    </>
   );
 }
