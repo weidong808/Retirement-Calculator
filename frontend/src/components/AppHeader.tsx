@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AppLogo } from "@/components/AppLogo";
 import { Container } from "@/components/Container";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -46,6 +47,7 @@ export function AppHeader() {
           >
             SSA.gov
           </a>
+          <ThemeToggle />
         </nav>
       </Container>
     </header>

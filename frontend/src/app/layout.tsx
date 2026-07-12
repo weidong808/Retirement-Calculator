@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { APP_DESCRIPTION, APP_NAME, APP_TAGLINE, APP_URL } from "@/lib/brand";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,8 +19,6 @@ const instrument = Instrument_Serif({
   subsets: ["latin"],
   weight: "400",
 });
-
-import { APP_DESCRIPTION, APP_NAME, APP_TAGLINE, APP_URL } from "@/lib/brand";
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
@@ -47,9 +47,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${instrument.variable} h-full antialiased`}
     >
-      <body className="bg-background text-foreground min-h-full flex flex-col">{children}</body>
+      <body className="bg-background text-foreground flex min-h-full flex-col">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }
