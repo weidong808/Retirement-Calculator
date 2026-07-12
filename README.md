@@ -1,6 +1,6 @@
 # RetireCheck
 
-Free US retirement planning calculator — **live at [retirecheck-wshi.vercel.app](https://retirecheck-wshi.vercel.app)**
+Free US retirement planning calculator — **live at [retirecheck.weidong-shi.com](https://retirecheck.weidong-shi.com)**
 
 4-step wizard → Monte Carlo simulation (1,000 scenarios), Social Security timing, tax/RMD/IRMAA projections, and a downloadable readiness score card. **Estimates only — not financial advice.**
 

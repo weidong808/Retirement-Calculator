@@ -2,7 +2,7 @@
 
 Next.js 16 app for the retirement calculator wizard and results UI.
 
-**Live:** https://retirecheck-wshi.vercel.app · **Root docs:** [`../README.md`](../README.md), [`../AGENTS.md`](../AGENTS.md)
+**Live:** https://retirecheck.weidong-shi.com · **Root docs:** [`../README.md`](../README.md), [`../AGENTS.md`](../AGENTS.md)
 
 ## Run
 

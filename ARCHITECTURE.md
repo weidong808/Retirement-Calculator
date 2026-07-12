@@ -1,6 +1,6 @@
 # Retirement Calculator Pro — Architecture
 
-**Product:** [RetireCheck](https://retirecheck-wshi.vercel.app) · **Stack:** Next.js + React (UI) · ASP.NET Core (API) · C# Domain (logic)  
+**Product:** [RetireCheck](https://retirecheck.weidong-shi.com) · **Stack:** Next.js + React (UI) · ASP.NET Core (API) · C# Domain (logic)  
 **Agent guide:** `AGENTS.md` · **Cursor rules:** `.cursor/rules/`
 
 ---
@@ -166,7 +166,7 @@ npm run dev
 | Frontend | Vercel | `main` (production) | `frontend/vercel.json`, `CALCULATOR_API_URL` env var |
 | API | Render | `main` | `render.yaml`, Docker |
 
-Live: **https://retirecheck-wshi.vercel.app**
+Live: **https://retirecheck.weidong-shi.com**
 
 ---
 
