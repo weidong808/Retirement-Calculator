@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { AppLogo } from "@/components/AppLogo";
 import { Container } from "@/components/Container";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SITE_HOME_URL } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -39,6 +40,14 @@ export function AppHeader() {
               </Link>
             );
           })}
+          <a
+            href={SITE_HOME_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="app-header-link"
+          >
+            weidong-shi.com
+          </a>
           <a
             href="https://www.ssa.gov/planners/retire/"
             target="_blank"

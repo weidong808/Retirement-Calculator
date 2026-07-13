@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Container } from "@/components/Container";
-import { APP_NAME } from "@/lib/brand";
+import { APP_NAME, SITE_HOME_URL } from "@/lib/brand";
 import { getDeveloperProfile } from "@/lib/developer";
 
 export function AppFooter() {
@@ -20,6 +20,9 @@ export function AppFooter() {
           <nav className="app-footer-nav" aria-label="Footer">
             <Link href="/about">About</Link>
             <Link href="/about#developer">Built by</Link>
+            <a href={SITE_HOME_URL} target="_blank" rel="noopener noreferrer">
+              weidong-shi.com
+            </a>
             <a href="https://www.ssa.gov/planners/retire/" target="_blank" rel="noopener noreferrer">
               SSA.gov
             </a>
