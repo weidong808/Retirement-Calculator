@@ -14,6 +14,7 @@ const DEFAULT_BIO =
   "I built RetireCheck to help everyday Americans answer one question: will my money last in retirement? No jargon, no sign-up — just clear estimates you can act on.";
 const DEFAULT_GITHUB_PROFILE = "https://github.com/weidong808";
 const DEFAULT_SOURCE_REPO = "https://github.com/weidong808/Retirement-Calculator";
+const DEFAULT_CONTACT_EMAIL = "contact@weidong-shi.com";
 
 function trim(v: string | undefined): string {
   return v?.trim() ?? "";
@@ -40,7 +41,7 @@ export function getDeveloperProfile(): DeveloperProfile {
     name: trim(process.env.NEXT_PUBLIC_DEVELOPER_NAME) || DEFAULT_NAME,
     title: trim(process.env.NEXT_PUBLIC_DEVELOPER_TITLE) || DEFAULT_TITLE,
     bio: trim(process.env.NEXT_PUBLIC_DEVELOPER_BIO) || DEFAULT_BIO,
-    email: trim(process.env.NEXT_PUBLIC_CONTACT_EMAIL),
+    email: trim(process.env.NEXT_PUBLIC_CONTACT_EMAIL) || DEFAULT_CONTACT_EMAIL,
     linkedIn: normalizeUrl(trim(process.env.NEXT_PUBLIC_DEVELOPER_LINKEDIN)),
     githubProfile,
     sourceRepo:
