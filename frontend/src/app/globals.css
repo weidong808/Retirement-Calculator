@@ -1720,6 +1720,83 @@ button {
 .dark .about-developer-link-accent:hover { background: rgba(62, 207, 142, 0.18); }
 .dark .about-developer-hint code { background: #1c1d1c; }
 
+/* ---------- Social Security quick estimate ---------- */
+.ss-estimate-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ss-estimate-link:hover {
+  color: var(--color-green-dark);
+}
+
+.ss-estimate {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.ss-estimate-title {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.ss-estimate-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.ss-estimate-row .form-input {
+  flex: 1;
+}
+
+.ss-estimate-btn {
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.ss-estimate-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  font-size: 0.9rem;
+  color: var(--color-navy);
+}
+
+.ss-estimate-disclaimer {
+  margin: 10px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.ss-estimate-disclaimer a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* Recharts — dark */
 .dark .recharts-cartesian-grid line { stroke: #242524; }
 .dark .recharts-cartesian-axis-tick text { fill: #a3a3a0; }

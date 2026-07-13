@@ -10,6 +10,26 @@ export class ApiError extends Error {
   }
 }
 
+/** Rough SSA quick-calculator style estimate — monthly benefit at full retirement age. */
+export async function estimateSsBenefit(annualEarnings: number): Promise<number> {
+  const response = await fetch(
+    `/api/calculator/ss-estimate?annualEarnings=${encodeURIComponent(annualEarnings)}`
+  );
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    const errors: string[] = Array.isArray(body.errors)
+      ? body.errors
+      : body.error
+        ? [body.error]
+        : ["Estimate failed"];
+    throw new ApiError(errors[0] ?? "Estimate failed", errors);
+  }
+
+  const data = (await response.json()) as { monthlyAtFra: number };
+  return data.monthlyAtFra;
+}
+
 export async function calculatePlan(
   input: RetirementPlanInput
 ): Promise<RetirementPlanResult> {

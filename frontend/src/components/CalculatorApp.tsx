@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { WizardProgress } from "@/components/WizardProgress";
 import { ResultsSection } from "@/components/ResultsSection";
 import { RangeSelect } from "@/components/RangeSelect";
+import { SsQuickEstimate } from "@/components/SsQuickEstimate";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { AppFooter } from "@/components/AppFooter";
 import { AppHeader } from "@/components/AppHeader";
@@ -117,6 +118,7 @@ function FormSection({ title, children }: { title: string; children: React.React
 
 export function CalculatorApp() {
   const [step, setStep] = useState(1);
+  const [view, setView] = useState<"form" | "results">("form");
   const [form, setForm] = useState<FormState>(defaultFormState);
   const [result, setResult] = useState<RetirementPlanResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -157,15 +159,22 @@ export function CalculatorApp() {
   };
 
   const handleEditAnswers = () => {
+    setView("form");
     setStep(1);
     setStepErrors({});
     setError(null);
     window.scrollTo(0, 0);
   };
 
+  const handleViewResults = () => {
+    setView("results");
+    window.scrollTo(0, 0);
+  };
+
   const handleStartOver = () => {
     setForm(defaultFormState);
     setResult(null);
+    setView("form");
     setStep(1);
     setStepErrors({});
     setError(null);
@@ -206,9 +215,8 @@ export function CalculatorApp() {
       const input = formToInput(formToRun);
       const plan = await calculatePlan(input);
       setResult(plan);
-      setTimeout(() => {
-        document.getElementById("results")?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
+      setView("results");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
       if (e instanceof ApiError) {
         setError(e.errors.join(" "));
@@ -247,6 +255,8 @@ export function CalculatorApp() {
         <PageHero />
         <Container className="page-content">
           <div className="calculator-shell">
+            {view === "form" && (
+              <>
             <WizardProgress currentStep={step} />
 
       <div className="form-container">
@@ -392,7 +402,7 @@ export function CalculatorApp() {
           <div className="wizard-step">
             <StepIntro
               title="Social Security"
-              subtitle="Check your estimate at ssa.gov — pick a range here if you're not sure."
+              subtitle="Use your SSA statement if you have it — or estimate it right here from your income."
             />
 
             {fraInfo && (
@@ -407,10 +417,18 @@ export function CalculatorApp() {
                 hint="At full retirement age — from your SSA statement or ssa.gov."
               >
                 <RangeSelect ranges={ssBenefitRanges} value={form.yourMonthlySsFra} onChange={(v) => update("yourMonthlySsFra", v)} customStep={100} />
+                <SsQuickEstimate
+                  defaultEarnings={isMarried ? "" : form.householdIncome}
+                  onApply={(monthly) => update("yourMonthlySsFra", String(monthly))}
+                />
               </Field>
               {isMarried && (
                 <Field label="Spouse's expected monthly Social Security">
                   <RangeSelect ranges={ssBenefitRanges} value={form.spouseMonthlySsFra} onChange={(v) => update("spouseMonthlySsFra", v)} customStep={100} />
+                  <SsQuickEstimate
+                    defaultEarnings={form.spouseIncome}
+                    onApply={(monthly) => update("spouseMonthlySsFra", String(monthly))}
+                  />
                 </Field>
               )}
             </div>
@@ -528,11 +546,23 @@ export function CalculatorApp() {
               {loading ? "Calculating…" : "See My Results"}
             </button>
           )}
+          {result && !loading && (
+            <button type="button" className="btn-outline" onClick={handleViewResults}>
+              View results →
+            </button>
+          )}
         </div>
       </div>
+              </>
+            )}
 
-      {result && (
+      {view === "results" && result && (
         <div id="results">
+          {error && (
+            <div className="error-banner" role="alert">
+              Latest calculation failed — showing your previous results. {error}
+            </div>
+          )}
           <ResultsSection
             result={result}
             targetRetirementAge={result.summary.targetRetirementAge}

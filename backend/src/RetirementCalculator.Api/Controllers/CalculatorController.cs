@@ -50,6 +50,22 @@ public class CalculatorController(IRetirementCalculatorEngine engine) : Controll
         var fra = FraCalculator.GetFullRetirementAge(year);
         return Ok(new FraLookupResponse(fra, FraCalculator.FormatFra(fra)));
     }
+
+    [HttpGet("ss-estimate")]
+    [ProducesResponseType(typeof(SsEstimateResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public ActionResult<SsEstimateResponse> EstimateSs([FromQuery] decimal annualEarnings)
+    {
+        if (annualEarnings <= 0m || annualEarnings > 5_000_000m)
+        {
+            return BadRequest(new { error = "Provide annualEarnings between 1 and 5,000,000." });
+        }
+
+        var estimate = SsQuickEstimator.Estimate(annualEarnings);
+        return Ok(new SsEstimateResponse(estimate.MonthlyAtFra));
+    }
 }
 
 public record FraLookupResponse(decimal Fra, string Label);
+
+public record SsEstimateResponse(decimal MonthlyAtFra);
