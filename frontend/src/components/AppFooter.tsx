@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/Container";
 import { APP_NAME, SITE_HOME_URL } from "@/lib/brand";
@@ -20,7 +21,20 @@ export function AppFooter() {
           <nav className="app-footer-nav" aria-label="Footer">
             <Link href="/about">About</Link>
             <Link href="/about#developer">Built by</Link>
-            <a href={SITE_HOME_URL} target="_blank" rel="noopener noreferrer">
+            <a
+              href={SITE_HOME_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem" }}
+            >
+              <Image
+                src="/ws-mark.svg"
+                alt=""
+                width={16}
+                height={16}
+                unoptimized
+                style={{ borderRadius: 4 }}
+              />
               weidong-shi.com
             </a>
             <a href="https://www.ssa.gov/planners/retire/" target="_blank" rel="noopener noreferrer">
