@@ -9,9 +9,9 @@ export interface DeveloperProfile {
 }
 
 const DEFAULT_NAME = "Weidong";
-const DEFAULT_TITLE = "Software engineer · RetireCheck creator";
+const DEFAULT_TITLE = "Senior Technology Architect · AI in Action";
 const DEFAULT_BIO =
-  "I built RetireCheck to help everyday Americans answer one question: will my money last in retirement? No jargon, no sign-up — just clear estimates you can act on.";
+  "RetireCheck is a flagship case study in my AI in Action series — a free US retirement calculator built with intent-driven vibe coding. No jargon, no sign-up — clear estimates you can act on.";
 const DEFAULT_GITHUB_PROFILE = "https://github.com/weidong808";
 const DEFAULT_SOURCE_REPO = "https://github.com/weidong808/Retirement-Calculator";
 const DEFAULT_CONTACT_EMAIL = "contact@weidong-shi.com";

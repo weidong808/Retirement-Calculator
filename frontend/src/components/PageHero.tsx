@@ -1,4 +1,4 @@
-import { APP_TAGLINE } from "@/lib/brand";
+import { APP_TAGLINE, SITE_SERIES_NAME } from "@/lib/brand";
 import { Container } from "@/components/Container";
 
 interface PageHeroProps {
@@ -8,7 +8,7 @@ interface PageHeroProps {
 }
 
 export function PageHero({
-  eyebrow = "Free US retirement planner",
+  eyebrow = `${SITE_SERIES_NAME} · Free US retirement planner`,
   title = APP_TAGLINE,
   subtitle = "Estimates only — not financial advice. Simplified US tax and Social Security rules.",
 }: PageHeroProps) {

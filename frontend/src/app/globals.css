@@ -184,6 +184,11 @@ body::after {
   text-underline-offset: 8px;
 }
 
+.app-header-site {
+  display: inline-flex !important;
+  align-items: center;
+}
+
 /* Page hero */
 .page-hero {
   position: relative;
@@ -1055,6 +1060,20 @@ button {
   color: var(--muted);
 }
 
+.app-footer-parent {
+  margin-top: 1rem;
+}
+
+.app-footer-parent-link {
+  color: var(--foreground) !important;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.app-footer-parent-link:hover {
+  color: var(--accent) !important;
+}
+
 .app-footer-nav {
   display: flex;
   flex-wrap: wrap;
@@ -1462,6 +1481,21 @@ button {
   font-size: 0.9rem;
   color: var(--color-slate);
   line-height: 1.55;
+}
+
+.about-developer-series {
+  margin: 0.75rem 0 0;
+}
+
+.about-developer-series-link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-green);
+  text-decoration: none;
+}
+
+.about-developer-series-link:hover {
+  text-decoration: underline;
 }
 
 .about-developer-links {

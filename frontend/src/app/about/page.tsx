@@ -10,7 +10,7 @@ export default function AboutPage() {
       <AppHeader />
       <main className="page-wrap">
         <PageHero
-          eyebrow="About RetireCheck"
+          eyebrow="AI in Action · About RetireCheck"
           title="How this calculator works"
           subtitle="Transparent estimates, clear disclaimers, and math you can trust in a tested domain layer."
         />

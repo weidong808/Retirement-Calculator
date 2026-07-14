@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/Container";
-import { APP_NAME, SITE_HOME_URL } from "@/lib/brand";
+import { SiteHomeLink } from "@/components/SiteHomeLink";
+import { APP_NAME, SITE_SERIES_NAME } from "@/lib/brand";
 import { getDeveloperProfile } from "@/lib/developer";
 
 export function AppFooter() {
@@ -15,28 +15,16 @@ export function AppFooter() {
           <div>
             <p className="app-footer-brand">{APP_NAME}</p>
             <p className="app-footer-tagline">
-              Free US retirement estimates — your data is not stored.
+              Free US retirement estimates — your data is not stored. Part of{" "}
+              {SITE_SERIES_NAME}.
             </p>
+            <div className="app-footer-parent">
+              <SiteHomeLink variant="full" markSize={28} className="app-footer-parent-link" />
+            </div>
           </div>
           <nav className="app-footer-nav" aria-label="Footer">
             <Link href="/about">About</Link>
             <Link href="/about#developer">Built by</Link>
-            <a
-              href={SITE_HOME_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem" }}
-            >
-              <Image
-                src="/ws-mark.svg"
-                alt=""
-                width={16}
-                height={16}
-                unoptimized
-                style={{ borderRadius: 4 }}
-              />
-              weidong-shi.com
-            </a>
             <a href="https://www.ssa.gov/planners/retire/" target="_blank" rel="noopener noreferrer">
               SSA.gov
             </a>
@@ -59,7 +47,9 @@ export function AppFooter() {
           <p className="app-footer-disclaimer">
             Estimates only — not financial advice.
           </p>
-          <p className="app-footer-copy">© {year} {APP_NAME}</p>
+          <p className="app-footer-copy">
+            © {year} {APP_NAME} · {SITE_SERIES_NAME}
+          </p>
         </div>
       </Container>
     </footer>

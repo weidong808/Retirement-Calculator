@@ -1,4 +1,9 @@
 import { buildFeedbackMailto, developerInitials, getDeveloperProfile } from "@/lib/developer";
+import {
+  SITE_HOME_LABEL,
+  SITE_HOME_URL,
+  SITE_SERIES_NAME,
+} from "@/lib/brand";
 
 export function DeveloperSection() {
   const profile = getDeveloperProfile();
@@ -15,11 +20,29 @@ export function DeveloperSection() {
           <h3>{profile.name}</h3>
           <p className="about-developer-title">{profile.title}</p>
           <p className="about-developer-bio">{profile.bio}</p>
+          <p className="about-developer-series">
+            <a
+              href={SITE_HOME_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="about-developer-series-link"
+            >
+              {SITE_SERIES_NAME} on {SITE_HOME_LABEL} ↗
+            </a>
+          </p>
         </div>
       </div>
 
       <h3 className="about-developer-connect-heading">Get in touch</h3>
       <div className="about-developer-links">
+        <a
+          href={SITE_HOME_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="about-developer-link"
+        >
+          {SITE_HOME_LABEL} ↗
+        </a>
         {profile.email && (
           <a
             href={`mailto:${profile.email}`}

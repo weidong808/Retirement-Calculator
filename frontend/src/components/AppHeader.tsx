@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AppLogo } from "@/components/AppLogo";
 import { Container } from "@/components/Container";
+import { SiteHomeLink } from "@/components/SiteHomeLink";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { SITE_HOME_URL } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -40,14 +40,7 @@ export function AppHeader() {
               </Link>
             );
           })}
-          <a
-            href={SITE_HOME_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="app-header-link"
-          >
-            weidong-shi.com
-          </a>
+          <SiteHomeLink variant="compact" className="app-header-link app-header-site" markSize={18} />
           <a
             href="https://www.ssa.gov/planners/retire/"
             target="_blank"
