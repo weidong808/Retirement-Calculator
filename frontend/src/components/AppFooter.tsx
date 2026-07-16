@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { Container } from "@/components/Container";
 import { SiteHomeLink } from "@/components/SiteHomeLink";
-import { APP_NAME, SITE_SERIES_NAME } from "@/lib/brand";
+import {
+  APP_NAME,
+  LINKEDIN_ARTICLE_URL,
+  SITE_CASE_STUDY_LABEL,
+  SITE_CASE_STUDY_URL,
+  LINKEDIN_ARTICLE_LABEL,
+  SITE_SERIES_NAME,
+} from "@/lib/brand";
 import { getDeveloperProfile } from "@/lib/developer";
 
 export function AppFooter() {
@@ -25,6 +32,12 @@ export function AppFooter() {
           <nav className="app-footer-nav" aria-label="Footer">
             <Link href="/about">About</Link>
             <Link href="/about#developer">Built by</Link>
+            <a href={SITE_CASE_STUDY_URL} target="_blank" rel="noopener noreferrer">
+              {SITE_CASE_STUDY_LABEL}
+            </a>
+            <a href={LINKEDIN_ARTICLE_URL} target="_blank" rel="noopener noreferrer">
+              {LINKEDIN_ARTICLE_LABEL}
+            </a>
             <a href="https://www.ssa.gov/planners/retire/" target="_blank" rel="noopener noreferrer">
               SSA.gov
             </a>

@@ -15,6 +15,7 @@ const DEFAULT_BIO =
 const DEFAULT_GITHUB_PROFILE = "https://github.com/weidong808";
 const DEFAULT_SOURCE_REPO = "https://github.com/weidong808/Retirement-Calculator";
 const DEFAULT_CONTACT_EMAIL = "contact@weidong-shi.com";
+const DEFAULT_LINKEDIN = "https://www.linkedin.com/in/weidong-shi/";
 
 function trim(v: string | undefined): string {
   return v?.trim() ?? "";
@@ -42,7 +43,9 @@ export function getDeveloperProfile(): DeveloperProfile {
     title: trim(process.env.NEXT_PUBLIC_DEVELOPER_TITLE) || DEFAULT_TITLE,
     bio: trim(process.env.NEXT_PUBLIC_DEVELOPER_BIO) || DEFAULT_BIO,
     email: trim(process.env.NEXT_PUBLIC_CONTACT_EMAIL) || DEFAULT_CONTACT_EMAIL,
-    linkedIn: normalizeUrl(trim(process.env.NEXT_PUBLIC_DEVELOPER_LINKEDIN)),
+    linkedIn:
+      normalizeUrl(trim(process.env.NEXT_PUBLIC_DEVELOPER_LINKEDIN)) ||
+      DEFAULT_LINKEDIN,
     githubProfile,
     sourceRepo:
       normalizeUrl(trim(process.env.NEXT_PUBLIC_SOURCE_REPO_URL)) ||

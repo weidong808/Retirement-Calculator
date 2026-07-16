@@ -1,5 +1,9 @@
 import { buildFeedbackMailto, developerInitials, getDeveloperProfile } from "@/lib/developer";
 import {
+  LINKEDIN_ARTICLE_LABEL,
+  LINKEDIN_ARTICLE_URL,
+  SITE_CASE_STUDY_LABEL,
+  SITE_CASE_STUDY_URL,
   SITE_HOME_LABEL,
   SITE_HOME_URL,
   SITE_SERIES_NAME,
@@ -43,6 +47,22 @@ export function DeveloperSection() {
         >
           {SITE_HOME_LABEL} ↗
         </a>
+        <a
+          href={SITE_CASE_STUDY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="about-developer-link"
+        >
+          {SITE_CASE_STUDY_LABEL} ↗
+        </a>
+        <a
+          href={LINKEDIN_ARTICLE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="about-developer-link"
+        >
+          {LINKEDIN_ARTICLE_LABEL} ↗
+        </a>
         {profile.email && (
           <a
             href={`mailto:${profile.email}`}
@@ -59,7 +79,7 @@ export function DeveloperSection() {
             rel="noopener noreferrer"
             className="about-developer-link"
           >
-            LinkedIn ↗
+            LinkedIn profile ↗
           </a>
         )}
         <a
