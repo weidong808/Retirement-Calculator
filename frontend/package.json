@@ -27,7 +27,7 @@
     "typescript": "^5"
   },
   "optionalDependencies": {
-    "@emnapi/core": "1.11.2",
-    "@emnapi/runtime": "1.11.2"
+    "@emnapi/core": "^1.11.2",
+    "@emnapi/runtime": "^1.11.2"
   }
 }
