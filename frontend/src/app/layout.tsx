@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Analytics } from "@/components/Analytics";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { APP_DESCRIPTION, APP_NAME, APP_TAGLINE, APP_URL } from "@/lib/brand";
 import "./globals.css";
@@ -52,6 +53,7 @@ export default function RootLayout({
     >
       <body className="bg-background text-foreground flex min-h-full flex-col">
         <ThemeProvider>{children}</ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
