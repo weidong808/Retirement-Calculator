@@ -12,9 +12,14 @@ export const SITE_SERIES_NAME = "AI in Action";
 export const SITE_SERIES_TAGLINE =
   "Personal production case studies in AI-assisted engineering";
 export const SITE_CASE_STUDY_URL =
-  "https://weidong-shi.com/articles/ai-in-action-retirecheck";
+  "https://weidong-shi.com/work/retirecheck";
 export const SITE_CASE_STUDY_LABEL = "Hub case study";
+export const SITE_INSIGHT_URL =
+  "https://weidong-shi.com/insights/ai-in-action-retirecheck";
+export const SITE_INSIGHT_LABEL = "Hub insight";
 export const LINKEDIN_ARTICLE_URL =
   "https://www.linkedin.com/pulse/cursor-action-what-spacexs-60b-bet-code-editor-actually-weidong-shi-nhmoc";
 export const LINKEDIN_ARTICLE_LABEL = "LinkedIn article";
 export const WS_MARK_SRC = "/ws-mark.svg";
+export const SLEEPCHECK_URL = "https://sleepcheck.weidong-shi.com";
+export const READINESS_URL = "https://readiness.weidong-shi.com";

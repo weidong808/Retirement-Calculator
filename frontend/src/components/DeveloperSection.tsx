@@ -4,6 +4,8 @@ import {
   LINKEDIN_ARTICLE_URL,
   SITE_CASE_STUDY_LABEL,
   SITE_CASE_STUDY_URL,
+  SITE_INSIGHT_LABEL,
+  SITE_INSIGHT_URL,
   SITE_HOME_LABEL,
   SITE_HOME_URL,
   SITE_SERIES_NAME,
@@ -54,6 +56,14 @@ export function DeveloperSection() {
           className="about-developer-link"
         >
           {SITE_CASE_STUDY_LABEL} ↗
+        </a>
+        <a
+          href={SITE_INSIGHT_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="about-developer-link"
+        >
+          {SITE_INSIGHT_LABEL} ↗
         </a>
         <a
           href={LINKEDIN_ARTICLE_URL}
