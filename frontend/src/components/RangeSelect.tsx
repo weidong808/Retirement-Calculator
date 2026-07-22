@@ -9,6 +9,7 @@ import {
 } from "@/lib/ranges";
 
 interface RangeSelectProps {
+  id?: string;
   ranges: RangeOption[];
   value: string;
   onChange: (value: string) => void;
@@ -19,6 +20,7 @@ interface RangeSelectProps {
 }
 
 export function RangeSelect({
+  id: idProp,
   ranges,
   value,
   onChange,
@@ -27,7 +29,8 @@ export function RangeSelect({
   customMin = 0,
   customStep = 1000,
 }: RangeSelectProps) {
-  const id = useId();
+  const generatedId = useId();
+  const id = idProp ?? generatedId;
   const custom = isCustomRangeValue(ranges, value);
   const [showCustom, setShowCustom] = useState(custom);
 

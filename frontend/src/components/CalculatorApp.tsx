@@ -1,6 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  Children,
+  cloneElement,
+  isValidElement,
+  useId,
+  useMemo,
+  useState,
+} from "react";
 import { WizardProgress } from "@/components/WizardProgress";
 import { ResultsSection } from "@/components/ResultsSection";
 import { RangeSelect } from "@/components/RangeSelect";
@@ -80,11 +87,25 @@ function Field({
   hint?: string;
   error?: string;
 }) {
+  const generatedId = useId();
+  const kids = Children.toArray(children);
+  const first = kids[0];
+  const id =
+    isValidElement<{ id?: string }>(first) && first.props.id
+      ? first.props.id
+      : generatedId;
+  const wired = kids.map((child, index) => {
+    if (index === 0 && isValidElement<{ id?: string }>(child)) {
+      return cloneElement(child, { id: child.props.id ?? id });
+    }
+    return child;
+  });
+
   return (
     <div className="form-group">
-      <label>{label}</label>
+      <label htmlFor={id}>{label}</label>
       {hint && <p className="field-label-hint">{hint}</p>}
-      {children}
+      {wired}
       {error && <span className="field-error">{error}</span>}
     </div>
   );
@@ -250,8 +271,11 @@ export function CalculatorApp() {
 
   return (
     <>
+      <a href="#main" className="skip-link">
+        Skip to content
+      </a>
       <AppHeader />
-      <main className="page-wrap">
+      <main id="main" className="page-wrap">
         <PageHero />
         <Container className="page-content">
           <div className="calculator-shell">

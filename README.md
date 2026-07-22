@@ -4,6 +4,13 @@ Free US retirement planning calculator — **live at [retirecheck.weidong-shi.co
 
 4-step wizard → Monte Carlo simulation (1,000 scenarios), Social Security timing, tax/RMD/IRMAA projections, and a downloadable readiness score card. **Estimates only — not financial advice.**
 
+| | |
+|--------|--------|
+| **Live demo** | [retirecheck.weidong-shi.com](https://retirecheck.weidong-shi.com) |
+| **Hub case study** | [weidong-shi.com/work/retirecheck](https://weidong-shi.com/work/retirecheck) |
+| **Hub insight** | [AI in Action · RetireCheck](https://weidong-shi.com/insights/ai-in-action-retirecheck) |
+| **Series** | [AI in Action](https://weidong-shi.com) |
+
 ## Stack
 
 | Layer | Technology |
@@ -80,7 +87,10 @@ On Vercel, set `CALCULATOR_API_URL` to your Render API URL in **Project Settings
 | Branch | Purpose |
 |--------|---------|
 | `main` | Production (Vercel + Render) |
-| `dev` | Day-to-day feature work |
+
+## Privacy
+
+Calculator inputs are sent to the API to compute results and are **not stored** as a saved plan. There is no account. The live site uses privacy-friendly page-view analytics (Vercel Analytics); financial inputs are not used as analytics events.
 
 ## API
 
@@ -92,4 +102,4 @@ All calculation logic lives in `RetirementCalculator.Domain` — no math in Reac
 
 ## Disclaimer
 
-Estimates only. Not financial advice. See [SSA.gov](https://www.ssa.gov/planners/retire/) for official Social Security information.
+Estimates only. Not financial, tax, or legal advice. See [SSA.gov](https://www.ssa.gov/planners/retire/) for official Social Security information.

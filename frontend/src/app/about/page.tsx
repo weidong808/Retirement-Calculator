@@ -7,8 +7,11 @@ import { PageHero } from "@/components/PageHero";
 export default function AboutPage() {
   return (
     <>
+      <a href="#main" className="skip-link">
+        Skip to content
+      </a>
       <AppHeader />
-      <main className="page-wrap">
+      <main id="main" className="page-wrap">
         <PageHero
           eyebrow="AI in Action · About RetireCheck"
           title="How this calculator works"

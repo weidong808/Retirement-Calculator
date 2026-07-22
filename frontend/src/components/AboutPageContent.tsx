@@ -69,7 +69,7 @@ const WHY_ITEMS = [
 export function AboutPageContent() {
   return (
     <>
-      <main className="about-main">
+      <div className="about-main">
         <div className="about-cta-bar">
           <Link href="/" className="about-cta-primary">
             Run your {APP_NAME} →
@@ -155,7 +155,8 @@ export function AboutPageContent() {
             <h3>Your privacy</h3>
             <p>
               Inputs are used to run calculations and are <strong>not stored</strong> on our
-              servers. No account, no tracking of your financial details.
+              servers. No account, and financial details are not used as analytics events.
+              The live site may record privacy-friendly page views (Vercel Analytics).
             </p>
           </article>
         </section>
@@ -167,7 +168,7 @@ export function AboutPageContent() {
             Back to calculator
           </Link>
         </p>
-      </main>
+      </div>
     </>
   );
 }

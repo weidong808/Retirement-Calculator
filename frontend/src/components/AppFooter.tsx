@@ -6,6 +6,8 @@ import {
   LINKEDIN_ARTICLE_URL,
   SITE_CASE_STUDY_LABEL,
   SITE_CASE_STUDY_URL,
+  SITE_INSIGHT_LABEL,
+  SITE_INSIGHT_URL,
   LINKEDIN_ARTICLE_LABEL,
   SITE_SERIES_NAME,
 } from "@/lib/brand";
@@ -34,6 +36,9 @@ export function AppFooter() {
             <Link href="/about#developer">Built by</Link>
             <a href={SITE_CASE_STUDY_URL} target="_blank" rel="noopener noreferrer">
               {SITE_CASE_STUDY_LABEL}
+            </a>
+            <a href={SITE_INSIGHT_URL} target="_blank" rel="noopener noreferrer">
+              {SITE_INSIGHT_LABEL}
             </a>
             <a href={LINKEDIN_ARTICLE_URL} target="_blank" rel="noopener noreferrer">
               {LINKEDIN_ARTICLE_LABEL}
