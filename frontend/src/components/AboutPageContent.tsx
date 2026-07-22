@@ -156,7 +156,8 @@ export function AboutPageContent() {
             <p>
               Inputs are used to run calculations and are <strong>not stored</strong> on our
               servers. No account, and financial details are not used as analytics events.
-              The live site may record privacy-friendly page views (Vercel Analytics).
+              The live site may record privacy-friendly page views (Vercel Analytics).{" "}
+              <Link href="/privacy">Full privacy page</Link>.
             </p>
           </article>
         </section>

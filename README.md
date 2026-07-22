@@ -90,7 +90,7 @@ On Vercel, set `CALCULATOR_API_URL` to your Render API URL in **Project Settings
 
 ## Privacy
 
-Calculator inputs are sent to the API to compute results and are **not stored** as a saved plan. There is no account. The live site uses privacy-friendly page-view analytics (Vercel Analytics); financial inputs are not used as analytics events.
+Calculator inputs are sent to the API to compute results and are **not stored** as a saved plan. There is no account. The live site uses privacy-friendly page-view analytics (Vercel Analytics); financial inputs are not used as analytics events. Live details: [Privacy](https://retirecheck.weidong-shi.com/privacy).
 
 ## API
 

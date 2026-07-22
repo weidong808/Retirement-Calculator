@@ -33,6 +33,7 @@ export function AppFooter() {
           </div>
           <nav className="app-footer-nav" aria-label="Footer">
             <Link href="/about">About</Link>
+            <Link href="/privacy">Privacy</Link>
             <Link href="/about#developer">Built by</Link>
             <a href={SITE_CASE_STUDY_URL} target="_blank" rel="noopener noreferrer">
               {SITE_CASE_STUDY_LABEL}

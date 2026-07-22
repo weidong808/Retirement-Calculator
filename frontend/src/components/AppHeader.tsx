@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/", label: "Calculator" },
   { href: "/about", label: "About" },
+  { href: "/privacy", label: "Privacy" },
 ];
 
 export function AppHeader() {
