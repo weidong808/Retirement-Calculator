@@ -23,3 +23,4 @@ export const LINKEDIN_ARTICLE_LABEL = "LinkedIn article";
 export const WS_MARK_SRC = "/ws-mark.svg";
 export const SLEEPCHECK_URL = "https://sleepcheck.weidong-shi.com";
 export const READINESS_URL = "https://readiness.weidong-shi.com";
+export const HABITCHECK_URL = "https://habitcheck.weidong-shi.com";

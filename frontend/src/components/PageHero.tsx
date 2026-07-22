@@ -1,16 +1,19 @@
 import { APP_TAGLINE, SITE_SERIES_NAME } from "@/lib/brand";
 import { Container } from "@/components/Container";
+import { SeriesAppsStrip } from "@/components/SeriesAppsStrip";
 
 interface PageHeroProps {
   eyebrow?: string;
   title?: string;
   subtitle?: string;
+  showSeriesStrip?: boolean;
 }
 
 export function PageHero({
   eyebrow = `${SITE_SERIES_NAME} · Free US retirement planner`,
   title = APP_TAGLINE,
   subtitle = "Estimates only — not financial advice. Simplified US tax and Social Security rules.",
+  showSeriesStrip = true,
 }: PageHeroProps) {
   return (
     <section className="page-hero">
@@ -25,6 +28,11 @@ export function PageHero({
         </p>
         <h1 className="animate-fade-up page-hero-title delay-1">{title}</h1>
         <p className="animate-fade-up page-hero-subtitle delay-2">{subtitle}</p>
+        {showSeriesStrip ? (
+          <div className="animate-fade-up delay-3">
+            <SeriesAppsStrip />
+          </div>
+        ) : null}
       </Container>
     </section>
   );

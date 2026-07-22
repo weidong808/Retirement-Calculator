@@ -23,6 +23,7 @@ export default function PrivacyPage() {
           eyebrow={`${APP_NAME} · Privacy`}
           title="Privacy"
           subtitle="What we collect, what we do not store, and how estimates stay educational."
+          showSeriesStrip={false}
         />
         <Container className="page-content">
           <div className="calculator-shell">

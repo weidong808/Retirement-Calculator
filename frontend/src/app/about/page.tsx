@@ -16,6 +16,7 @@ export default function AboutPage() {
           eyebrow="AI in Action · About RetireCheck"
           title="How this calculator works"
           subtitle="Transparent estimates, clear disclaimers, and math you can trust in a tested domain layer."
+          showSeriesStrip={false}
         />
         <Container className="page-content">
           <div className="calculator-shell">
