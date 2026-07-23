@@ -86,7 +86,8 @@ function PlanExplainerInner({ result }: { result: RetirementPlanResult }) {
       }
 
       const finalExplanation = parseStreamedExplanation(full);
-      if (!finalExplanation) {
+      // Match JSON validation: overview alone is not enough — need drivers.
+      if (!finalExplanation || finalExplanation.drivers.length === 0) {
         await explainOnce();
       }
     } catch {
