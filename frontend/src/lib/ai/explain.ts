@@ -77,6 +77,79 @@ export type PlanExplanation = {
   nextSteps: string[];
 };
 
+// Plain-text variant for streaming: sectioned markers the client can render
+// progressively, instead of waiting for a full JSON object.
+export const EXPLAIN_STREAM_SYSTEM_PROMPT = [
+  EXPLAIN_SYSTEM_PROMPT,
+  "",
+  "Output format (plain text, no markdown, no JSON):",
+  "OVERVIEW: <2-3 sentences>",
+  "DRIVERS:",
+  "- <short point>",
+  "- <short point>",
+  "NEXTSTEPS:",
+  "- <short optional lever>",
+].join("\n");
+
+export function buildStreamExplainMessages(summary: ExplainSummary): {
+  system: string;
+  user: string;
+} {
+  return {
+    system: EXPLAIN_STREAM_SYSTEM_PROMPT,
+    user: `Authoritative plan results (do not change these numbers):\n${JSON.stringify(
+      summary,
+    )}`,
+  };
+}
+
+/**
+ * Tolerant parser for the streamed, sectioned plain-text explanation. Safe to
+ * call repeatedly as tokens arrive; returns null until an overview exists.
+ */
+export function parseStreamedExplanation(
+  text: string,
+): PlanExplanation | null {
+  if (!text.trim()) return null;
+  const normalized = text.replace(/\r\n/g, "\n");
+
+  const overviewMatch = normalized.match(
+    /OVERVIEW:\s*([\s\S]*?)(?:\n\s*DRIVERS:|\n\s*NEXTSTEPS:|$)/i,
+  );
+  const overview = overviewMatch ? overviewMatch[1].trim() : "";
+  if (!overview) return null;
+
+  const driversBlock = sectionBlock(normalized, "DRIVERS", "NEXTSTEPS");
+  const nextBlock = sectionBlock(normalized, "NEXTSTEPS", null);
+
+  return {
+    overview: overview.slice(0, 800),
+    drivers: bulletList(driversBlock, 4),
+    nextSteps: bulletList(nextBlock, 3),
+  };
+}
+
+function sectionBlock(
+  text: string,
+  start: string,
+  end: string | null,
+): string {
+  const startIdx = text.search(new RegExp(`\\n\\s*${start}:`, "i"));
+  if (startIdx < 0) return "";
+  const after = text.slice(startIdx).replace(new RegExp(`^\\n\\s*${start}:`, "i"), "");
+  if (!end) return after;
+  const endIdx = after.search(new RegExp(`\\n\\s*${end}:`, "i"));
+  return endIdx < 0 ? after : after.slice(0, endIdx);
+}
+
+function bulletList(block: string, max: number): string[] {
+  return block
+    .split("\n")
+    .map((l) => l.replace(/^\s*[-*]\s*/, "").trim())
+    .filter((l) => l.length > 0)
+    .slice(0, max);
+}
+
 function stripCodeFences(text: string): string {
   return text
     .replace(/^\s*```(?:json)?/i, "")

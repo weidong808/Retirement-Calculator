@@ -3,6 +3,7 @@ import { getExplainerConfig } from "@/lib/ai/config";
 import { checkRateLimit } from "@/lib/ai/rateLimit";
 import {
   buildExplainMessages,
+  buildStreamExplainMessages,
   parseExplanation,
   type ExplainSummary,
 } from "@/lib/ai/explain";
@@ -82,6 +83,10 @@ export async function POST(req: Request) {
     );
   }
 
+  if ((body as { stream?: unknown })?.stream === true) {
+    return streamExplanation(config, summary);
+  }
+
   const { system, user } = buildExplainMessages(summary);
 
   try {
@@ -133,4 +138,89 @@ export async function POST(req: Request) {
       { status: 502 },
     );
   }
+}
+
+type ConfigLike = { apiKey: string; model: string; baseUrl: string };
+
+/**
+ * Stream the explanation as sectioned plain text. Proxies OpenAI's SSE and
+ * re-emits content deltas; the client parses sections progressively and can
+ * fall back to the non-streaming JSON path on failure.
+ */
+async function streamExplanation(
+  config: ConfigLike,
+  summary: ExplainSummary,
+): Promise<Response> {
+  const { system, user } = buildStreamExplainMessages(summary);
+
+  const upstream = await fetch(`${config.baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${config.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: config.model,
+      temperature: 0.4,
+      stream: true,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+    }),
+  }).catch(() => null);
+
+  if (!upstream || !upstream.ok || !upstream.body) {
+    return new NextResponse("stream_unavailable", { status: 502 });
+  }
+
+  const reader = upstream.body.getReader();
+  const decoder = new TextDecoder();
+  const encoder = new TextEncoder();
+  let buffer = "";
+
+  const out = new ReadableStream<Uint8Array>({
+    async pull(controllerStream) {
+      try {
+        const { done, value } = await reader.read();
+        if (done) {
+          controllerStream.close();
+          return;
+        }
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split("\n\n");
+        buffer = events.pop() ?? "";
+        for (const event of events) {
+          const line = event.split("\n").find((l) => l.startsWith("data:"));
+          if (!line) continue;
+          const data = line.slice(5).trim();
+          if (data === "[DONE]") {
+            controllerStream.close();
+            return;
+          }
+          try {
+            const json = JSON.parse(data) as {
+              choices?: { delta?: { content?: string } }[];
+            };
+            const delta = json.choices?.[0]?.delta?.content;
+            if (delta) controllerStream.enqueue(encoder.encode(delta));
+          } catch {
+            // Ignore keep-alive / non-JSON lines.
+          }
+        }
+      } catch {
+        controllerStream.close();
+      }
+    },
+    cancel() {
+      void reader.cancel();
+    },
+  });
+
+  return new NextResponse(out, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-store",
+    },
+  });
 }

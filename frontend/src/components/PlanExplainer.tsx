@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { buildSummary, type PlanExplanation } from "@/lib/ai/explain";
+import {
+  buildSummary,
+  parseStreamedExplanation,
+  type PlanExplanation,
+} from "@/lib/ai/explain";
 import type { RetirementPlanResult } from "@/types/retirement";
 
 /**
@@ -34,27 +38,61 @@ export function PlanExplainer({ result }: { result: RetirementPlanResult }) {
     setError(null);
   }, [result]);
 
+  async function explainOnce() {
+    const res = await fetch("/api/calculator/explain", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ summary: buildSummary(result) }),
+    });
+    const json = (await res.json()) as {
+      ok?: boolean;
+      error?: string;
+      explanation?: PlanExplanation;
+    };
+    if (!res.ok || !json.ok || !json.explanation) {
+      setError(json.error || "Could not generate an explanation.");
+      return;
+    }
+    setExplanation(json.explanation);
+  }
+
   async function explain() {
     setLoading(true);
     setError(null);
+    setExplanation(null);
     try {
       const res = await fetch("/api/calculator/explain", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ summary: buildSummary(result) }),
+        body: JSON.stringify({ summary: buildSummary(result), stream: true }),
       });
-      const json = (await res.json()) as {
-        ok?: boolean;
-        error?: string;
-        explanation?: PlanExplanation;
-      };
-      if (!res.ok || !json.ok || !json.explanation) {
-        setError(json.error || "Could not generate an explanation.");
+
+      if (!res.ok || !res.body) {
+        await explainOnce();
         return;
       }
-      setExplanation(json.explanation);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let full = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        full += decoder.decode(value, { stream: true });
+        const partial = parseStreamedExplanation(full);
+        if (partial) setExplanation(partial);
+      }
+
+      const finalExplanation = parseStreamedExplanation(full);
+      if (!finalExplanation) {
+        await explainOnce();
+      }
     } catch {
-      setError("Could not generate an explanation.");
+      try {
+        await explainOnce();
+      } catch {
+        setError("Could not generate an explanation.");
+      }
     } finally {
       setLoading(false);
     }
@@ -96,16 +134,18 @@ export function PlanExplainer({ result }: { result: RetirementPlanResult }) {
         <div className="mt-4 space-y-4 text-sm text-slate-700 dark:text-slate-300">
           <p className="leading-relaxed">{explanation.overview}</p>
 
-          <div>
-            <p className="font-semibold text-slate-900 dark:text-slate-100">
-              What most affects this plan
-            </p>
-            <ul className="mt-2 list-disc space-y-1 pl-5">
-              {explanation.drivers.map((d, i) => (
-                <li key={i}>{d}</li>
-              ))}
-            </ul>
-          </div>
+          {explanation.drivers.length > 0 && (
+            <div>
+              <p className="font-semibold text-slate-900 dark:text-slate-100">
+                What most affects this plan
+              </p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {explanation.drivers.map((d, i) => (
+                  <li key={i}>{d}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {explanation.nextSteps.length > 0 && (
             <div>
