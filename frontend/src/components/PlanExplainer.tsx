@@ -12,8 +12,16 @@ import type { RetirementPlanResult } from "@/types/retirement";
  * Optional AI narrative for a computed plan. The deterministic numbers stay
  * authoritative — this only explains them. Hidden unless the server reports
  * the explainer is configured.
+ *
+ * Remounts when the numeric summary changes so a fresh calculation clears the
+ * previous narrative without a setState-in-effect reset.
  */
 export function PlanExplainer({ result }: { result: RetirementPlanResult }) {
+  const summaryKey = JSON.stringify(buildSummary(result));
+  return <PlanExplainerInner key={summaryKey} result={result} />;
+}
+
+function PlanExplainerInner({ result }: { result: RetirementPlanResult }) {
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,12 +39,6 @@ export function PlanExplainer({ result }: { result: RetirementPlanResult }) {
       cancelled = true;
     };
   }, []);
-
-  // Reset the narrative whenever a fresh calculation comes in.
-  useEffect(() => {
-    setExplanation(null);
-    setError(null);
-  }, [result]);
 
   async function explainOnce() {
     const res = await fetch("/api/calculator/explain", {
