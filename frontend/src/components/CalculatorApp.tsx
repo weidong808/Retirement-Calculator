@@ -10,6 +10,7 @@ import {
 } from "react";
 import { WizardProgress } from "@/components/WizardProgress";
 import { ResultsSection } from "@/components/ResultsSection";
+import { PlanExplainer } from "@/components/PlanExplainer";
 import { RangeSelect } from "@/components/RangeSelect";
 import { SsQuickEstimate } from "@/components/SsQuickEstimate";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
@@ -594,6 +595,7 @@ export function CalculatorApp() {
             onEditAnswers={handleEditAnswers}
             onStartOver={handleStartOver}
           />
+          <PlanExplainer result={result} />
         </div>
       )}
 
