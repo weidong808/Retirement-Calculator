@@ -3,6 +3,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  /* Paint native controls (select popups, date/number inputs) to match theme. */
+  color-scheme: light;
   --background: #f7f7f5;
   --foreground: #121212;
   --muted: #5c5c5c;
@@ -32,6 +34,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: #0b0c0b;
   --foreground: #f3f3f1;
   --muted: #a3a3a0;
